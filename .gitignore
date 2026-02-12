@@ -1,0 +1,41 @@
+# Environment
+.env
+.env.local
+!.env.example
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# RAG / ChromaDB local storage
+soc-agent/rag_data/
+rag_data/
+
+# Logs
+*.log
+logs/
+
+# Demo artifacts
+demo_results.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tool configs
+.claude/
+.cursor/

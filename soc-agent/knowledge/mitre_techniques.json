@@ -1,0 +1,182 @@
+[
+  {
+    "id": "T1059.001",
+    "name": "Command and Scripting Interpreter: PowerShell",
+    "tactic": "Execution",
+    "platform": "Windows",
+    "description": "Adversaries may abuse PowerShell commands and scripts for execution. PowerShell is a powerful interactive command-line interface and scripting environment included in the Windows operating system. Adversaries can use PowerShell to perform a number of actions, including discovery of information and execution of code. Examples include the Start-Process cmdlet which can be used to run an executable and the Invoke-Command cmdlet which runs a command locally or on a remote computer.",
+    "detection": "Monitor for loading and/or execution of artifacts associated with PowerShell, such as the creation of PowerShell.exe or powershell_ise.exe processes. Monitor for PowerShell execution with encoded commands (-enc, -EncodedCommand) which is a common obfuscation technique. Track PowerShell script block logging (Event ID 4104) and module logging for suspicious cmdlets like Invoke-Expression, Invoke-WebRequest, DownloadString, Net.WebClient.",
+    "mitigation": "Set PowerShell execution policy to restrict unsigned scripts. Use application whitelisting to limit PowerShell usage. Enable PowerShell Constrained Language Mode. Enable Script Block Logging and Module Logging. Disable PowerShell v2 which lacks logging capabilities."
+  },
+  {
+    "id": "T1059.003",
+    "name": "Command and Scripting Interpreter: Windows Command Shell",
+    "tactic": "Execution",
+    "platform": "Windows",
+    "description": "Adversaries may abuse the Windows command shell (cmd.exe) for execution. The command shell can be invoked remotely via Remote Services such as SSH. Batch files (.bat, .cmd) can also be used.",
+    "detection": "Monitor process creation for cmd.exe, especially when spawned by unusual parent processes like Microsoft Office applications, web servers, or scripting engines. Look for command shell arguments that indicate malicious activity such as whoami, net user, net group.",
+    "mitigation": "Restrict cmd.exe access using application whitelisting. Monitor for suspicious command shell usage patterns."
+  },
+  {
+    "id": "T1027",
+    "name": "Obfuscated Files or Information",
+    "tactic": "Defense Evasion",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may attempt to make an executable or file difficult to discover or analyze by encrypting, encoding, or otherwise obfuscating its contents on the system or in transit. This is common behavior that can be used across different platforms and the network to evade defenses. Base64 encoding of PowerShell commands is an extremely common technique.",
+    "detection": "Detect encoded or obfuscated commands. Look for Base64-encoded strings in command lines, especially in PowerShell (-enc, -EncodedCommand flags). Monitor for high-entropy strings in process arguments. Use YARA rules for detecting known encoding patterns.",
+    "mitigation": "Consider utilizing the Antimalware Scan Interface (AMSI) on Windows to analyze commands at runtime. Use content inspection and deep packet inspection for network traffic."
+  },
+  {
+    "id": "T1110",
+    "name": "Brute Force",
+    "tactic": "Credential Access",
+    "platform": "Windows, Linux, macOS, Azure AD, Office 365",
+    "description": "Adversaries may use brute force techniques to gain access to accounts when passwords are unknown or when password hashes are obtained. Techniques include password guessing, password spraying, and credential stuffing using previously breached credentials.",
+    "detection": "Monitor authentication logs for multiple failed authentication attempts from the same source. Detect password spraying by looking for a single source attempting to authenticate against many accounts. Use account lockout policies and monitor for lockout events. Track Event IDs 4625 (failed logon) and 4771 (Kerberos pre-authentication failed).",
+    "mitigation": "Implement account lockout policies after a certain number of failed attempts. Use multi-factor authentication (MFA). Implement IP-based rate limiting on authentication endpoints. Monitor for credential stuffing using threat intelligence feeds of breached credentials."
+  },
+  {
+    "id": "T1110.001",
+    "name": "Brute Force: Password Guessing",
+    "tactic": "Credential Access",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries with no prior knowledge of legitimate credentials may guess passwords to attempt access to accounts. Typically, management services over commonly used ports are targeted (SSH port 22, Telnet port 23, FTP port 21, SMB port 445, RDP port 3389, etc.).",
+    "detection": "Monitor for many failed authentication attempts across various accounts that share a common source address. Monitor for many failed login attempts to a single account in a short time period.",
+    "mitigation": "Set account lockout policies after a certain number of failed login attempts. Use MFA for remote access services."
+  },
+  {
+    "id": "T1078",
+    "name": "Valid Accounts",
+    "tactic": "Defense Evasion, Persistence, Privilege Escalation, Initial Access",
+    "platform": "Windows, Linux, macOS, Azure AD",
+    "description": "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access, Persistence, Privilege Escalation, or Defense Evasion. Compromised credentials may be used to bypass access controls placed on various resources on systems within the network.",
+    "detection": "Monitor for unusual account behavior such as logons at unusual times, from unusual locations, or from unusual systems. Configure robust logging of account logon events including Event ID 4624 (successful logon) and correlate with known user behavior baselines.",
+    "mitigation": "Use MFA. Implement privileged access management. Regular credential rotation. Monitor for credential exposure in breaches."
+  },
+  {
+    "id": "T1071.001",
+    "name": "Application Layer Protocol: Web Protocols",
+    "tactic": "Command and Control",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may communicate using application layer protocols associated with web traffic to avoid detection. Commands to the remote system, and often the results of those commands, will be embedded within the protocol traffic between the client and server. Common protocols include HTTP and HTTPS.",
+    "detection": "Analyze network data for uncommon data flows (e.g., a client sending significantly more data than it receives from a server). Analyze HTTP/HTTPS traffic for known C2 patterns, user-agent anomalies, unusual URI patterns, and beaconing behavior.",
+    "mitigation": "Network intrusion detection and prevention systems that use network signatures to identify traffic for specific adversary malware. SSL/TLS inspection for encrypted C2 traffic."
+  },
+  {
+    "id": "T1021.001",
+    "name": "Remote Services: Remote Desktop Protocol",
+    "tactic": "Lateral Movement",
+    "platform": "Windows",
+    "description": "Adversaries may use Valid Accounts to log into a computer using the Remote Desktop Protocol (RDP). The adversary may then perform actions as the logged-on user. RDP is commonly used by system administrators for remote management.",
+    "detection": "Monitor for user accounts logged into systems they would not normally access or access patterns to multiple systems over a relatively short period of time. Event ID 4624 with Logon Type 10 indicates RDP logons.",
+    "mitigation": "Use MFA for RDP. Restrict RDP access via network segmentation and firewalls. Disable RDP if not required. Use Remote Desktop Gateway."
+  },
+  {
+    "id": "T1021.006",
+    "name": "Remote Services: Windows Remote Management",
+    "tactic": "Lateral Movement",
+    "platform": "Windows",
+    "description": "Adversaries may use Valid Accounts to interact with remote systems using Windows Remote Management (WinRM). WinRM allows users to interact with a remote system through a command shell, run scripts, or manage services and processes. WMI (Windows Management Instrumentation) is frequently used in conjunction.",
+    "detection": "Monitor for WinRM connections, especially from unexpected sources. Look for WMI process creation events (Event ID 4688 with wmic.exe, wmiprvse.exe). Monitor for remote process creation via WMI or PowerShell remoting.",
+    "mitigation": "Disable WinRM if not needed. Restrict WinRM access to specific hosts. Monitor and log WinRM activity. Use network segmentation."
+  },
+  {
+    "id": "T1047",
+    "name": "Windows Management Instrumentation",
+    "tactic": "Execution",
+    "platform": "Windows",
+    "description": "Adversaries may abuse Windows Management Instrumentation (WMI) to execute malicious commands and payloads. WMI is an administration feature that provides a uniform environment to access Windows system components. The WMI service enables both local and remote access. Remote access uses DCOM and WinRM.",
+    "detection": "Monitor for creation of wmiprvse.exe and wmic.exe processes. Track WMI event subscriptions and WMI queries. Monitor for process creation via WMI (ParentImage contains wmiprvse.exe). Event ID 5861 for WMI activity.",
+    "mitigation": "Prevent credential overlap across admin and standard user accounts. Restrict WMI permissions. Consider disabling WMI for users who do not need it."
+  },
+  {
+    "id": "T1053.005",
+    "name": "Scheduled Task/Job: Scheduled Task",
+    "tactic": "Execution, Persistence, Privilege Escalation",
+    "platform": "Windows",
+    "description": "Adversaries may abuse the Windows Task Scheduler to perform task scheduling for initial or recurring execution of malicious code. The schtasks utility can create scheduled tasks on remote or local systems.",
+    "detection": "Monitor process execution from the schtasks utility. Monitor for the creation of new scheduled tasks via Event ID 4698. Look for tasks created with SYSTEM-level privileges or tasks that execute scripts from unusual locations.",
+    "mitigation": "Configure settings for scheduled tasks to force tasks to run under the context of the authenticated account instead of allowing them to run as SYSTEM."
+  },
+  {
+    "id": "T1048",
+    "name": "Exfiltration Over Alternative Protocol",
+    "tactic": "Exfiltration",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may steal data by exfiltrating it over a different protocol than that of the existing command and control channel. Common alternative protocols include FTP, SMTP, HTTP/S, DNS, SMB. Data may be compressed or encrypted before exfiltration.",
+    "detection": "Analyze network data for uncommon data flows. Monitor for large outbound transfers to unusual destinations. Track DNS queries for unusually long domain names (DNS tunneling). Monitor for data transfers to cloud storage services.",
+    "mitigation": "Use network segmentation and data loss prevention (DLP) tools. Monitor outbound connections for unusual volume or destination. Implement egress filtering."
+  },
+  {
+    "id": "T1566.001",
+    "name": "Phishing: Spearphishing Attachment",
+    "tactic": "Initial Access",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may send spearphishing emails with a malicious attachment in an attempt to gain access to victim systems. Spearphishing attachment is a specific variant of spearphishing where the adversary attaches a file to the email.",
+    "detection": "Monitor for suspicious email attachments. Network intrusion detection systems and email gateway filtering can identify compressed and known malicious file types. Detonation chambers or sandboxes can analyze potentially malicious attachments.",
+    "mitigation": "User training to recognize phishing. Email filtering and sandboxing. Disable macros in Office documents. Use attack surface reduction rules."
+  },
+  {
+    "id": "T1055",
+    "name": "Process Injection",
+    "tactic": "Defense Evasion, Privilege Escalation",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may inject code into processes to evade process-based defenses as well as possibly elevate privileges. Process injection is a method of executing arbitrary code in the address space of a separate live process. Running code in the context of another process may allow access to the process's memory, system/network resources, and possibly elevated privileges.",
+    "detection": "Monitor Windows API calls indicative of injection: CreateRemoteThread, VirtualAllocEx, WriteProcessMemory, NtQueueApcThread. Monitor DLL/PE file events for DLLs that are not recognized or not normally loaded into a process. Use Sysmon Event ID 8 (CreateRemoteThread).",
+    "mitigation": "Use Endpoint Detection and Response (EDR) tools. Enable Windows Defender Credential Guard. Implement code signing enforcement."
+  },
+  {
+    "id": "T1003.001",
+    "name": "OS Credential Dumping: LSASS Memory",
+    "tactic": "Credential Access",
+    "platform": "Windows",
+    "description": "Adversaries may attempt to access credential material stored in the process memory of the Local Security Authority Subsystem Service (LSASS). After a user logs on, the system generates and stores a variety of credential materials in LSASS process memory. Common tools include Mimikatz, ProcDump, and comsvcs.dll MiniDump.",
+    "detection": "Monitor for processes accessing lsass.exe memory. Sysmon Event ID 10 for process access to LSASS. Monitor for use of known credential dumping tools. Track rundll32.exe with comsvcs.dll MiniDump arguments.",
+    "mitigation": "Enable Windows Defender Credential Guard. Enable LSA protection (RunAsPPL). Restrict debug privileges. Disable WDigest authentication."
+  },
+  {
+    "id": "T1486",
+    "name": "Data Encrypted for Impact",
+    "tactic": "Impact",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may encrypt data on target systems or on large numbers of systems in a network to interrupt availability to system and network resources. This is commonly associated with ransomware operations.",
+    "detection": "Monitor for unusual file modification patterns across many files. Track for known ransomware file extensions. Monitor for vssadmin.exe, wmic.exe commands that delete shadow copies. Alert on mass file rename operations.",
+    "mitigation": "Maintain offline backups. Implement network segmentation. Use application whitelisting. Monitor for early warning signs of ransomware deployment."
+  },
+  {
+    "id": "T1105",
+    "name": "Ingress Tool Transfer",
+    "tactic": "Command and Control",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may transfer tools or other files from an external system into a compromised environment. Tools or files may be copied from an external adversary-controlled system to the victim network through the command and control channel or through alternate protocols such as ftp. Common methods include PowerShell DownloadString/DownloadFile, certutil.exe, bitsadmin.exe, and curl.",
+    "detection": "Monitor for file creation and network connections from commonly abused transfer utilities (certutil.exe, bitsadmin.exe, PowerShell with Net.WebClient). Analyze network traffic for file downloads from suspicious external hosts.",
+    "mitigation": "Network intrusion prevention. Application whitelisting to restrict LOLBins usage. Web proxy filtering."
+  },
+  {
+    "id": "T1070.004",
+    "name": "Indicator Removal: File Deletion",
+    "tactic": "Defense Evasion",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may delete files left behind by the actions of their intrusion activity. Malware, tools, or other non-native files dropped or created on a system by an adversary may leave traces to indicate what was done within a network.",
+    "detection": "Monitor for file deletions using Sysmon Event ID 23 (File Delete). Track use of del, Remove-Item, or secure delete utilities. Monitor for deletion of Windows Event Logs using wevtutil.exe.",
+    "mitigation": "Enable file system auditing. Use centralized log collection so that deleted local logs are preserved. Enable Sysmon file delete logging."
+  },
+  {
+    "id": "T1562.001",
+    "name": "Impair Defenses: Disable or Modify Tools",
+    "tactic": "Defense Evasion",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may modify and/or disable security tools to avoid possible detection of their malware/tools and activities. This could include killing security software processes or services, modifying registry keys or configuration files so that tools do not operate correctly.",
+    "detection": "Monitor for changes to security software configurations. Track termination of security processes or services. Monitor for registry modifications to security software keys. Alert on attempts to stop or disable Windows Defender, EDR agents, or firewall services.",
+    "mitigation": "Implement tamper protection for security tools. Use centralized monitoring to detect when endpoint agents go silent. Ensure security software runs with SYSTEM privileges."
+  },
+  {
+    "id": "T1190",
+    "name": "Exploit Public-Facing Application",
+    "tactic": "Initial Access",
+    "platform": "Windows, Linux, macOS",
+    "description": "Adversaries may attempt to exploit a weakness in an Internet-facing host or service using software, data, or commands in order to cause unintended or unanticipated behavior. The weakness in the system can be a bug, a glitch, or a design vulnerability.",
+    "detection": "Monitor application logs for signs of exploitation attempts. Use web application firewalls (WAF) to detect and block common exploit patterns. Monitor for unusual process creation from web server processes.",
+    "mitigation": "Keep systems and applications updated. Use WAF. Implement network segmentation. Conduct regular vulnerability scanning and penetration testing."
+  }
+]
