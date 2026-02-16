@@ -154,7 +154,10 @@ The system stores every investigation in ChromaDB. On the next triage, it retrie
 │   └── requirements.txt
 ├── sample_data/
 │   └── security_events.json       # 100+ events, 9 attack scenarios
-├── demo_runner.py                 # Automated demo script
+├── docs/
+│   ├── PROJECT_EXPLANATION.md     # Manager-facing project overview
+│   ├── ALERTS_AND_INVESTIGATION.md # SOC concepts and investigation walkthrough
+│   └── DEMO_TALK_TRACK.md        # Live demo presentation script
 └── test_rag.py                    # RAG validation suite
 ```
 
@@ -227,8 +230,9 @@ The sample data in `sample_data/security_events.json` covers:
 
 | File | Purpose |
 |------|---------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, module breakdown |
-| [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) | Step-by-step demo commands (PowerShell + Bash) |
+| [PROJECT_EXPLANATION.md](docs/PROJECT_EXPLANATION.md) | What this project does, explained for stakeholders |
+| [ALERTS_AND_INVESTIGATION.md](docs/ALERTS_AND_INVESTIGATION.md) | SOC alert concepts, triage workflow, MITRE mapping |
+| [DEMO_TALK_TRACK.md](docs/DEMO_TALK_TRACK.md) | Narrated demo script for live walkthroughs |
 
 ---
 
