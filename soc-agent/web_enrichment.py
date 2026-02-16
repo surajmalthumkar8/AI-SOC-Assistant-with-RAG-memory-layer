@@ -11,11 +11,11 @@ from typing import Dict, List, Any, Optional
 import httpx
 
 # API Keys from environment
-VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "334bd897b27b6bce228d2359d2174e928aa8e9a958e26a210a27eca2f6b6b950")
-ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY", "2010d50cede49511cc7d51683b0bf88228ac4e204b9ebdecf46f3676ada15a5ecf0dbf730ad50a6f")
+VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
+ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY", "")
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY", "")
 GREYNOISE_API_KEY = os.getenv("GREYNOISE_API_KEY", "")
-URLHAUS_API_KEY = os.getenv("URLHAUS_API_KEY", "")  # URLhaus is free, no key needed
+URLHAUS_API_KEY = os.getenv("URLHAUS_API_KEY", "")
 ALIENVAULT_API_KEY = os.getenv("ALIENVAULT_API_KEY", "")
 
 

@@ -324,13 +324,13 @@ class LLMAnalyzer:
             "recommended_actions": {
                 "immediate": ["Review event details", "Check for related alerts"],
                 "short_term": ["Investigate affected systems"],
-                "long_term": ["Configure LLM API for intelligent analysis"]
+                "long_term": ["Configure LLM API for automated analysis"]
             },
             "investigation_queries": [
                 f'index=security_events host="{event_data.get("host", "*")}"',
                 f'index=security_events src_ip="{event_data.get("src_ip", "*")}"'
             ],
-            "analyst_notes": "Automated rule-based analysis. Configure ANTHROPIC_API_KEY or OPENAI_API_KEY for AI-powered analysis.",
+            "analyst_notes": "Rule-based analysis only. Set GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY in .env for full analysis.",
             "llm_enabled": False
         }
 

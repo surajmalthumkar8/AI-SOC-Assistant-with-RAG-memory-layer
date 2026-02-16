@@ -457,7 +457,7 @@ class EnrichedAnalyzer:
             "recommended_actions": self._get_recommended_actions(severity),
             "investigation_queries": self._generate_queries(event_data),
             "verdict_justification": f"Rule-based analysis. Found {len(malicious_iocs)} malicious IOCs.",
-            "analyst_notes": "LLM not configured. Configure GEMINI_API_KEY for AI-powered analysis.",
+            "analyst_notes": "LLM not configured. Set GEMINI_API_KEY in .env to enable automated analysis.",
             "llm_enabled": False
         }
 

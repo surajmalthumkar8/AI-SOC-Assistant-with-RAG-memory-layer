@@ -177,7 +177,7 @@ class ComprehensiveAnalyzer:
     - Splunk MCP for SIEM data
     - Threat Intel APIs for IOC enrichment
     - Web Search for research and validation
-    - LLM for intelligent analysis
+    - LLM for structured analysis
     """
 
     def __init__(self):
