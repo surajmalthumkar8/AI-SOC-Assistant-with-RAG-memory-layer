@@ -28,6 +28,7 @@ demo_results.json
 demo_runner.py
 ARCHITECTURE.md
 DEMO_RUNBOOK.md
+docs/
 
 # IDE
 .vscode/

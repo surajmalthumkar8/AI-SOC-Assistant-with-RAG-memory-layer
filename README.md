@@ -154,10 +154,6 @@ The system stores every investigation in ChromaDB. On the next triage, it retrie
 │   └── requirements.txt
 ├── sample_data/
 │   └── security_events.json       # 100+ events, 9 attack scenarios
-├── docs/
-│   ├── PROJECT_EXPLANATION.md     # Manager-facing project overview
-│   ├── ALERTS_AND_INVESTIGATION.md # SOC concepts and investigation walkthrough
-│   └── DEMO_TALK_TRACK.md        # Live demo presentation script
 └── test_rag.py                    # RAG validation suite
 ```
 
@@ -223,16 +219,6 @@ The sample data in `sample_data/security_events.json` covers:
 | `RAG disabled` | Set `RAG_ENABLED=true` in `.env`, install `chromadb` |
 | `Gemini 429 rate limit` | Wait 60 seconds, free tier has per-minute limits |
 | `chromadb install fails (M-series Mac)` | Try `pip install --no-binary :all: chroma-hnswlib` first |
-
----
-
-## Docs
-
-| File | Purpose |
-|------|---------|
-| [PROJECT_EXPLANATION.md](docs/PROJECT_EXPLANATION.md) | What this project does, explained for stakeholders |
-| [ALERTS_AND_INVESTIGATION.md](docs/ALERTS_AND_INVESTIGATION.md) | SOC alert concepts, triage workflow, MITRE mapping |
-| [DEMO_TALK_TRACK.md](docs/DEMO_TALK_TRACK.md) | Narrated demo script for live walkthroughs |
 
 ---
 
