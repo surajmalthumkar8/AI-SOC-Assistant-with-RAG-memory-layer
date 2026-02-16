@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import httpx
 
-# Configuration - Set your API key in .env
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -363,11 +362,9 @@ class LLMAnalyzer:
         return bool(re.match(r'^[a-fA-F0-9]{32,64}$', s))
 
 
-# Singleton instance
 llm_analyzer = LLMAnalyzer()
 
 
-# Convenience functions
 async def analyze_security_event(event_data: Dict) -> Dict:
     """Analyze a security event using LLM"""
     return await llm_analyzer.analyze_event(event_data)

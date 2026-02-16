@@ -1,29 +1,20 @@
-"""
-Configuration module for SOC Agent
-"""
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv(dotenv_path='../.env')
 
 class Config:
-    # Agent settings
     AGENT_PORT = int(os.getenv('AGENT_PORT', 8000))
     NODE_PORT = int(os.getenv('NODE_PORT', 3000))
     DEBUG = os.getenv('DEBUG', 'true').lower() == 'true'
-
-    # MCP Connector URL
     MCP_URL = f"http://localhost:{NODE_PORT}"
 
-    # SOC Rules from memory.json
     SOC_RULES = [
         "failed login burst",
         "powershell encoded command",
         "multiple process spawn"
     ]
 
-    # MITRE ATT&CK Mappings
     MITRE_MAPPINGS = {
         "failed login burst": {
             "technique": "T1110",

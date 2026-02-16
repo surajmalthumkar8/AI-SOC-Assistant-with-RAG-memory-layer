@@ -253,12 +253,10 @@ class MCPToolExecutor:
         return await self.client.ingest_enrichment(event_id, enrichment)
 
 
-# Singleton instances
 splunk_mcp = SplunkMCPClient()
 mcp_executor = MCPToolExecutor(splunk_mcp)
 
 
-# Convenience functions
 async def test_mcp_connection() -> Dict:
     """Test Splunk MCP connection"""
     return await splunk_mcp.test_connection()

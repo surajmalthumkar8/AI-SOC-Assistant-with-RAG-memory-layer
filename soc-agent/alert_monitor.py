@@ -346,13 +346,11 @@ class IOCEnricher:
         }
 
 
-# Singleton instances
 alert_monitor = AlertMonitor()
 batch_processor = BatchProcessor()
 ioc_enricher = IOCEnricher()
 
 
-# Convenience functions
 async def start_monitoring(poll_interval: int = 60):
     """Start alert monitoring"""
     alert_monitor.poll_interval = poll_interval

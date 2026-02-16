@@ -567,13 +567,11 @@ class ComprehensiveResearcher:
         return compiled
 
 
-# Singleton instances
 web_search = WebSearchEngine()
 security_researcher = SecurityResearcher()
 comprehensive_researcher = ComprehensiveResearcher()
 
 
-# Convenience functions
 async def search_web(query: str, num_results: int = 10) -> Dict:
     """General web search"""
     return await web_search.search(query, num_results)

@@ -24,7 +24,6 @@ from web_search import (
 from web_enrichment import threat_intel, enrich_event_iocs
 from rag_engine import rag_engine
 
-# LLM Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -38,7 +37,6 @@ def log(msg: str, data: Any = None):
         print(f"  -> {json.dumps(data, indent=2, default=str)[:500]}")
 
 
-# Comprehensive Analysis Prompt
 COMPREHENSIVE_PROMPT = """You are an expert SOC (Security Operations Center) analyst conducting a comprehensive investigation.
 
 ## Security Event
@@ -211,24 +209,19 @@ class ComprehensiveAnalyzer:
 
         investigation_start = datetime.now()
 
-        # Step 1: Query Splunk MCP for context
         log("Step 1: Querying Splunk MCP for context...")
         splunk_context = await self._get_splunk_context(event_data)
 
-        # Step 2: Enrich IOCs from threat intel APIs
-        log("Step 2: Enriching IOCs from threat intel APIs...")
+        log("Step 2: Enriching IOCs...")
         threat_intel_data = await self._enrich_iocs(event_data)
 
-        # Step 3: Research via web search
-        log("Step 3: Researching via web search...")
+        log("Step 3: Web search...")
         web_research = await self._web_research(event_data)
 
-        # Step 3.5: RAG Retrieval - organizational context
-        log("Step 3.5: Retrieving organizational context via RAG...")
+        log("Step 3.5: RAG retrieval...")
         rag_context = self._rag_retrieve(event_data)
 
-        # Step 4: Analyze with LLM
-        log("Step 4: Analyzing with LLM...")
+        log("Step 4: LLM analysis...")
         if self.enabled:
             analysis = await self._llm_analyze(
                 event_data, splunk_context, threat_intel_data, web_research, rag_context
@@ -238,11 +231,11 @@ class ComprehensiveAnalyzer:
                 event_data, splunk_context, threat_intel_data, web_research
             )
 
-        # Step 5: Validate key findings
+        # validate key findings
         log("Step 5: Validating key findings...")
         validated_analysis = await self._validate_findings(analysis, event_data)
 
-        # Compile final report
+        # compile report
         investigation_time = (datetime.now() - investigation_start).total_seconds()
 
         report = {
@@ -267,7 +260,7 @@ class ComprehensiveAnalyzer:
             "time": f"{investigation_time:.1f}s"
         })
 
-        # Auto-ingest into RAG for future retrieval
+        # store in RAG for future lookups
         try:
             rag_result = rag_engine.store_investigation(report)
             report["rag_ingested"] = True
@@ -514,12 +507,9 @@ class ComprehensiveAnalyzer:
         """Fallback rule-based analysis"""
         log("Using rule-based analysis (LLM not configured)")
 
-        # Determine severity from enrichment
         overall_risk = threat_intel.get("overall_risk", "unknown")
         severity_map = {"critical": "critical", "high": "high", "medium": "medium", "low": "low"}
         severity = severity_map.get(overall_risk, "medium")
-
-        # Check for malicious patterns
         command_line = event_data.get("command_line", "").lower()
         if "-enc" in command_line and "powershell" in command_line:
             classification = "true_positive"
@@ -599,11 +589,9 @@ class ComprehensiveAnalyzer:
         return analysis
 
 
-# Singleton instance
 comprehensive_analyzer = ComprehensiveAnalyzer()
 
 
-# Convenience functions
 async def full_investigation(event_data: Dict) -> Dict:
     """Run comprehensive investigation"""
     return await comprehensive_analyzer.full_investigation(event_data)

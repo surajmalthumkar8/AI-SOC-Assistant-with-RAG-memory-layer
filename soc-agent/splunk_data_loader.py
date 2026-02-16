@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv(dotenv_path='../.env')
 
-# Configuration from environment
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = int(os.getenv("SPLUNK_PORT", "8089"))
 SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME", "admin")

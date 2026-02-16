@@ -12,7 +12,6 @@ import httpx
 from web_enrichment import threat_intel, enrich_event_iocs, enrich_ioc
 from mcp_client import splunk_mcp, search_splunk
 
-# Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -602,11 +601,9 @@ class EnrichedAnalyzer:
         return queries
 
 
-# Singleton instance
 enriched_analyzer = EnrichedAnalyzer()
 
 
-# Convenience functions
 async def analyze_with_enrichment(event_data: Dict) -> Dict:
     """Full analysis with web enrichment and LLM"""
     return await enriched_analyzer.analyze_and_enrich(event_data)

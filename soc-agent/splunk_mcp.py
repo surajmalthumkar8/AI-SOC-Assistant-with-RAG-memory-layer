@@ -10,7 +10,6 @@ from typing import Dict, List, Any, Optional
 import httpx
 import re
 
-# Configuration
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = os.getenv("SPLUNK_PORT", "8089")
 SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME", "admin")
@@ -412,12 +411,10 @@ class MCPToolRunner:
         return await self.mcp_server.get_mcp_capabilities()
 
 
-# Singleton instances
 splunk_mcp_server = SplunkMCPServer()
 mcp_tool_runner = MCPToolRunner()
 
 
-# Convenience functions
 async def test_splunk_mcp() -> Dict:
     """Test Splunk MCP connection"""
     return await splunk_mcp_server.test_connection()

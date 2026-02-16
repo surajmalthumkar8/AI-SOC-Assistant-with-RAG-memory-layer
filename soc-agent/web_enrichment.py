@@ -10,7 +10,6 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import httpx
 
-# API Keys from environment
 VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
 ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY", "")
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY", "")
@@ -607,11 +606,9 @@ class ThreatIntelAggregator:
             return "informational"
 
 
-# Singleton instance
 threat_intel = ThreatIntelAggregator()
 
 
-# Convenience functions
 async def enrich_ioc(indicator: str) -> Dict:
     """Enrich a single IOC"""
     return await threat_intel.enrich_indicator(indicator)

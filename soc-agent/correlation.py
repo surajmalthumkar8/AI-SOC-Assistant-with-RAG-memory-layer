@@ -201,5 +201,4 @@ class CorrelationEngine:
         return {"error": f"Rule not found: {rule_name}"}
 
 
-# Singleton instance
 correlation_engine = CorrelationEngine()
