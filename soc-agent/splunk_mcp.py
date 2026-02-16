@@ -1,7 +1,6 @@
 """
 Splunk Native MCP Server Client
-Connects directly to Splunk's MCP server at /services/mcp
-Uses the Model Context Protocol for AI-native Splunk integration
+Connects directly to Splunk's REST API at /services/mcp.
 """
 import os
 import json
@@ -9,14 +8,13 @@ import asyncio
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import httpx
-import subprocess
-import sys
+import re
 
 # Configuration
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = os.getenv("SPLUNK_PORT", "8089")
 SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME", "admin")
-SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD", "changeme")
+SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD", "")
 SPLUNK_TOKEN = os.getenv("SPLUNK_TOKEN", "")
 SPLUNK_MCP_ENDPOINT = f"https://{SPLUNK_HOST}:{SPLUNK_PORT}/services/mcp"
 
@@ -222,7 +220,6 @@ class SplunkMCPServer:
             return 'index=security_events event_type="dns_query" | stats count by query | sort -count | head 50'
 
         # Specific IP
-        import re
         ip_match = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', question)
         if ip_match:
             ip = ip_match.group()
@@ -343,14 +340,14 @@ class SplunkMCPServer:
 class MCPToolRunner:
     """
     Runs MCP tools using the mcp-remote protocol.
-    Can be used with Claude Desktop or other MCP clients.
+    Exposes MCP tools for external consumers.
     """
 
     def __init__(self):
         self.mcp_server = SplunkMCPServer()
 
     def get_mcp_config(self) -> Dict:
-        """Get MCP configuration for Claude Desktop or other clients"""
+        """Get MCP configuration for external clients"""
         token = SPLUNK_TOKEN if SPLUNK_TOKEN else "YOUR_TOKEN_HERE"
 
         return {
@@ -442,5 +439,5 @@ async def get_splunk_alerts() -> List[Dict]:
 
 
 def get_mcp_client_config() -> Dict:
-    """Get MCP client configuration for Claude Desktop"""
+    """Get MCP client configuration for external consumers"""
     return mcp_tool_runner.get_mcp_config()

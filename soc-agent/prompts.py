@@ -1,6 +1,6 @@
 """
 SOC Reasoning Prompts
-Prompt templates for AI-powered alert triage and analysis
+Templates used by the LLM analyzer for triage, correlation, and reporting.
 """
 
 # Alert Triage Prompt

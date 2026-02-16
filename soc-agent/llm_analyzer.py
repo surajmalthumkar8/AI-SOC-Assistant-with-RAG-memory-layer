@@ -1,6 +1,6 @@
 """
-LLM-Powered Security Analyzer
-Integrates with Claude/OpenAI for intelligent alert analysis
+LLM Security Analyzer
+Sends structured prompts to Gemini/Claude/OpenAI for alert triage and classification.
 """
 import os
 import json

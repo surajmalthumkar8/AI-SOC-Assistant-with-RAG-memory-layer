@@ -1,14 +1,13 @@
 """
 Comprehensive Security Analyzer
-Integrates Splunk MCP + Web Search + LLM for full alert triage and investigation
-
-Pipeline:
-1. Query Splunk via native MCP for event context
-2. Enrich IOCs from threat intel APIs
-3. Research via web search for validation
-4. Analyze with LLM (Gemini/Claude/OpenAI)
-5. Validate findings with additional web research
-6. Return comprehensive, validated report
+Runs the full 6-step investigation pipeline:
+  1. Pull event context from Splunk (via MCP)
+  2. Enrich IOCs against threat intel APIs
+  3. Web search for validation / known campaigns
+  3.5 RAG retrieval for org-specific context
+  4. LLM analysis (Gemini / Claude / OpenAI)
+  5. Cross-validate findings
+  6. Return structured investigation report
 """
 import os
 import json

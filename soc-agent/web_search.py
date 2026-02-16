@@ -1,11 +1,7 @@
 """
-Web Search Module for Threat Research
-Provides general web search capability for:
-- Threat intelligence research
-- CVE/vulnerability lookup
-- MITRE ATT&CK technique details
-- Remediation guidance
-- Solution validation
+Web Search Module
+Searches for IOC reputation, CVE details, MITRE techniques, and remediation steps.
+Supports Serper, Google CSE, and DuckDuckGo backends.
 """
 import os
 import json

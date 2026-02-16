@@ -1,6 +1,6 @@
 /**
  * Splunk MCP Connector
- * Bridges Splunk REST API to AI Agent via MCP protocol
+ * Bridges Splunk REST API to the SOC agent via HTTP endpoints.
  */
 
 require('dotenv').config({ path: '../.env' });
@@ -18,7 +18,7 @@ const config = {
     splunkHost: process.env.SPLUNK_HOST || 'localhost',
     splunkPort: process.env.SPLUNK_PORT || 8089,
     splunkUsername: process.env.SPLUNK_USERNAME || 'admin',
-    splunkPassword: process.env.SPLUNK_PASSWORD || 'changeme',
+    splunkPassword: process.env.SPLUNK_PASSWORD || '',
     splunkToken: process.env.SPLUNK_TOKEN || '',
     splunkMcpEndpoint: process.env.SPLUNK_MCP_ENDPOINT || 'https://localhost:8089/services/mcp',
     nodePort: process.env.NODE_PORT || 3000,
@@ -344,7 +344,7 @@ app.post('/api/native-mcp/execute', async (req, res) => {
     }
 });
 
-// Get MCP configuration for Claude Desktop/AI clients
+// Get MCP configuration for external clients
 app.get('/api/mcp/config', (req, res) => {
     log('MCP config requested');
     const mcpConfig = {

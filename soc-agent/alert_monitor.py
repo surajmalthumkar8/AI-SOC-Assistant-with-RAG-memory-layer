@@ -1,6 +1,6 @@
 """
 Alert Monitor
-Monitors Splunk for new alerts and automatically triages/enriches them
+Polls Splunk for new triggered alerts and runs automated triage on each.
 """
 import os
 import json

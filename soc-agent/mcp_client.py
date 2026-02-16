@@ -1,6 +1,6 @@
 """
 Splunk MCP Client
-Connects to Splunk's native MCP server for AI-powered queries
+Handles communication with the MCP connector and Splunk REST API.
 """
 import os
 import json
@@ -13,7 +13,7 @@ import httpx
 SPLUNK_HOST = os.getenv("SPLUNK_HOST", "localhost")
 SPLUNK_PORT = os.getenv("SPLUNK_PORT", "8089")
 SPLUNK_USERNAME = os.getenv("SPLUNK_USERNAME", "admin")
-SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD", "changeme")
+SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD", "")
 SPLUNK_MCP_ENDPOINT = os.getenv("SPLUNK_MCP_ENDPOINT", f"https://{SPLUNK_HOST}:{SPLUNK_PORT}/services/mcp")
 
 

@@ -1,6 +1,6 @@
 """
-Enriched LLM Analyzer
-Combines web-based threat intelligence with LLM analysis for comprehensive alert triage
+Enriched Analyzer
+Combines IOC threat intel enrichment with LLM analysis for deeper triage.
 """
 import os
 import json

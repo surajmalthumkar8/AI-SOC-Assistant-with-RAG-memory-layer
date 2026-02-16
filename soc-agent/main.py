@@ -1,6 +1,6 @@
 """
-AI SOC Agent - FastAPI Application
-Main entry point for the SOC reasoning agent
+SOC Agent — FastAPI backend for automated alert triage and investigation.
+Connects Splunk, threat intel enrichment, LLM analysis, and RAG memory.
 """
 import json
 from datetime import datetime
@@ -15,21 +15,14 @@ from pydantic import BaseModel
 from config import config
 from correlation import correlation_engine
 from prompts import TRIAGE_PROMPT, CORRELATION_PROMPT, SUMMARY_PROMPT
-# ai_investigator removed - use comprehensive_analyzer instead
 from llm_analyzer import llm_analyzer, analyze_security_event, get_threat_intel
-
-# New imports for enhanced functionality
 from mcp_client import splunk_mcp, mcp_executor, test_mcp_connection, search_splunk, get_security_events
 from web_enrichment import threat_intel, enrich_ioc, enrich_event_iocs, lookup_ip, lookup_domain, lookup_hash, lookup_url
 from enriched_analyzer import enriched_analyzer, analyze_with_enrichment, quick_triage
 from alert_monitor import alert_monitor, batch_processor, ioc_enricher, get_monitoring_stats
-
-# Splunk Native MCP and Web Search imports
 from splunk_mcp import splunk_mcp_server, ask_splunk_natural, search_splunk_mcp, get_mcp_client_config, test_splunk_mcp
 from web_search import web_search, security_researcher, comprehensive_researcher, research_for_event_triage, validate_finding, search_remediation, full_research
 from comprehensive_analyzer import comprehensive_analyzer, full_investigation
-
-# RAG Memory Layer
 from rag_engine import rag_engine
 from knowledge_store import bootstrap_knowledge, seed_mitre_techniques, load_playbooks, ingest_investigations_from_file
 
@@ -71,7 +64,7 @@ async def lifespan(app: FastAPI):
 # FastAPI app
 app = FastAPI(
     title="AI SOC Agent",
-    description="Intelligent Security Operations Center Agent",
+    description="Automated SOC triage and investigation pipeline",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -743,7 +736,7 @@ async def test_native_splunk_mcp():
 
 @app.get("/api/splunk-mcp/config")
 async def get_splunk_mcp_config():
-    """Get MCP client configuration for Claude Desktop"""
+    """Get MCP client configuration for external consumers"""
     return get_mcp_client_config()
 
 

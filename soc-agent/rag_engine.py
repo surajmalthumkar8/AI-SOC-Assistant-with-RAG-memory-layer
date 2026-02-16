@@ -1,9 +1,9 @@
 """
-RAG Engine - Retrieval-Augmented Generation for SOC AI Investigations
+RAG Engine — Vector store for SOC investigation memory.
 
-Local vector database using ChromaDB for organizational knowledge.
-Stores and retrieves past investigations, analyst feedback, SOC playbooks,
-and MITRE ATT&CK knowledge to augment LLM analysis with org-specific context.
+Uses ChromaDB to persist past investigations, analyst feedback, playbooks,
+and MITRE ATT&CK mappings. Retrieved context is injected into LLM prompts
+so the system learns from previous triage decisions.
 
 Collections:
   - investigations  : Completed investigation reports and outcomes

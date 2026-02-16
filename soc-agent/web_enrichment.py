@@ -1,19 +1,18 @@
 """
-Web-Based Threat Intelligence Enrichment
-Integrates with VirusTotal, AbuseIPDB, Shodan, GreyNoise, URLhaus, and more
+Threat Intelligence Enrichment
+Queries VirusTotal, AbuseIPDB, Shodan, GreyNoise, URLhaus, and AlienVault OTX.
 """
 import os
 import re
 import json
 import asyncio
-import hashlib
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 import httpx
 
 # API Keys from environment
-VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
-ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY", "")
+VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "334bd897b27b6bce228d2359d2174e928aa8e9a958e26a210a27eca2f6b6b950")
+ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY", "2010d50cede49511cc7d51683b0bf88228ac4e204b9ebdecf46f3676ada15a5ecf0dbf730ad50a6f")
 SHODAN_API_KEY = os.getenv("SHODAN_API_KEY", "")
 GREYNOISE_API_KEY = os.getenv("GREYNOISE_API_KEY", "")
 URLHAUS_API_KEY = os.getenv("URLHAUS_API_KEY", "")  # URLhaus is free, no key needed

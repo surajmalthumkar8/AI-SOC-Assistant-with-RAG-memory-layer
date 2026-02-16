@@ -1,516 +1,234 @@
-# Architecture Documentation
+# Architecture
 
-Technical design documentation for the AI SOC Assistant with RAG memory layer.
-
----
-
-## System Architecture
-
-### High-Level Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              AI SOC ASSISTANT                                    │
-│                                                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐│
-│  │                           USER / API CLIENT                                  ││
-│  │                    (curl, Postman, Python, Browser)                         ││
-│  └──────────────────────────────────┬──────────────────────────────────────────┘│
-│                                     │                                            │
-│                                     │ HTTP :8080                                 │
-│                                     ▼                                            │
-│  ┌─────────────────────────────────────────────────────────────────────────────┐│
-│  │                         SOC AGENT (Python FastAPI)                          ││
-│  │                                                                              ││
-│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────────────────────┐││
-│  │  │   main.py      │  │comprehensive_  │  │      rag_engine.py            │││
-│  │  │  (Endpoints)   │  │  analyzer.py   │  │    (ChromaDB Vector DB)       │││
-│  │  └───────┬────────┘  └───────┬────────┘  └───────────────┬────────────────┘││
-│  │          │                   │                           │                  ││
-│  │          └───────────────────┼───────────────────────────┘                  ││
-│  │                              │                                               ││
-│  │  ┌───────────────────────────┼───────────────────────────────────────────┐  ││
-│  │  │                           │                                            │  ││
-│  │  ▼                           ▼                           ▼                ▼  ││
-│  │ splunk_mcp.py        web_enrichment.py           web_search.py    llm_analyzer││
-│  │ (Splunk Native)      (IOC Enrichment)            (Web Research)   (Gemini AI) ││
-│  └──┬──────────────────────────┬─────────────────────────────┬────────────────┘│
-│     │                          │                             │                  │
-│     │ :3000                    │                             │                  │
-│     ▼                          ▼                             ▼                  │
-│  ┌─────────┐            ┌──────────────┐             ┌────────────────┐        │
-│  │   MCP   │            │ Threat Intel │             │  Google Gemini │        │
-│  │Connector│            │    APIs      │             │      API       │        │
-│  └────┬────┘            │              │             └────────────────┘        │
-│       │                 │ - GreyNoise  │                                        │
-│       │ :8089           │ - URLhaus    │                                        │
-│       ▼                 │ - VirusTotal │                                        │
-│  ┌─────────┐            └──────────────┘                                        │
-│  │ SPLUNK  │                                                                    │
-│  │Enterprise│                                                                   │
-│  └─────────┘                                                                    │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
+Technical design of the SOC Assistant — how the components connect, how data flows through the investigation pipeline, and how the RAG memory layer works.
 
 ---
 
-## Investigation Pipeline (6 Steps)
-
-The comprehensive investigation pipeline processes security events through 6 stages:
+## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        INVESTIGATION PIPELINE                                    │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-  INPUT                                                                    OUTPUT
-    │                                                                        ▲
-    │  POST /api/investigate/comprehensive                                   │
-    │  {"event_data": {...}}                                                 │
-    ▼                                                                        │
-┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
-│ STEP 1  │──▶│ STEP 2  │──▶│ STEP 3  │──▶│STEP 3.5 │──▶│ STEP 4  │──▶│ STEP 5  │
-│ SPLUNK  │   │   IOC   │   │   WEB   │   │   RAG   │   │   LLM   │   │VALIDATE │
-│ CONTEXT │   │ ENRICH  │   │ SEARCH  │   │RETRIEVE │   │ANALYSIS │   │         │
-└─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
-    │              │              │              │              │           │
-    ▼              ▼              ▼              ▼              ▼           ▼
- splunk_       web_           web_          rag_           llm_        web_
- mcp.py     enrichment.py   search.py    engine.py     analyzer.py  search.py
-    │              │              │              │              │           │
-    │              │              │              │              │           │
-    ▼              ▼              ▼              ▼              ▼           ▼
-┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
-│ Query   │   │ Query   │   │ Search  │   │ Retrieve│   │ Call    │   │Validate │
-│ Splunk  │   │GreyNoise│   │DuckDuck │   │ Similar │   │ Gemini  │   │Findings │
-│ for     │   │ URLhaus │   │Go for   │   │ Invest- │   │ with    │   │ with    │
-│ context │   │ etc.    │   │ threat  │   │ igations│   │ all     │   │ web     │
-│         │   │         │   │ intel   │   │ MITRE   │   │ context │   │ search  │
-│         │   │         │   │         │   │Playbooks│   │         │   │         │
-└─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
-    │              │              │              │              │           │
-    │              │              │              │              │           │
-    ▼              ▼              ▼              ▼              ▼           ▼
- Host &         IP/Domain      Attack       Past cases,     JSON        Verified
- User           reputation     patterns,    techniques,    analysis     report
- history        scores         techniques   playbooks       JSON
-
-
-                              AFTER COMPLETION
-                                    │
-                                    ▼
-                           ┌───────────────┐
-                           │  AUTO-INGEST  │
-                           │  to RAG for   │
-                           │  future use   │
-                           └───────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                         SOC Agent (:8080)                           │
+│                                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │ comprehensive │  │  enriched    │  │    llm       │              │
+│  │ _analyzer.py  │  │ _analyzer.py │  │ _analyzer.py │              │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
+│         │                  │                  │                      │
+│  ┌──────▼──────────────────▼──────────────────▼───────┐             │
+│  │                    main.py (FastAPI)                │             │
+│  └────┬──────────┬──────────┬──────────┬──────────┬───┘             │
+│       │          │          │          │          │                  │
+│  ┌────▼────┐ ┌───▼───┐ ┌───▼───┐ ┌───▼────┐ ┌──▼──────┐          │
+│  │ rag     │ │ web   │ │ web   │ │ splunk │ │ mcp     │          │
+│  │ engine  │ │ enrich│ │ search│ │ mcp    │ │ client  │          │
+│  └────┬────┘ └───┬───┘ └───┬───┘ └───┬────┘ └──┬──────┘          │
+└───────┼──────────┼─────────┼─────────┼──────────┼─────────────────┘
+        │          │         │         │          │
+        ▼          ▼         ▼         ▼          ▼
+   ┌─────────┐ ┌────────┐ ┌────────┐ ┌─────────┐ ┌─────────────┐
+   │ChromaDB │ │VT/IPDB │ │DDG/    │ │ Splunk  │ │MCP Connector│
+   │(local)  │ │Shodan  │ │Serper  │ │ :8089   │ │   :3000     │
+   └─────────┘ └────────┘ └────────┘ └─────────┘ └──────┬──────┘
+                                                         │
+                                                    ┌────▼────┐
+                                                    │ Splunk  │
+                                                    │ REST API│
+                                                    └─────────┘
 ```
 
-### Pipeline Timing
+### Components
 
-| Step | Module | What It Does | Time |
-|------|--------|--------------|------|
-| 1. Splunk Context | `splunk_mcp.py` | Query host/user history | 2-5s |
-| 2. IOC Enrichment | `web_enrichment.py` | IP/domain/hash reputation | 3-10s |
-| 3. Web Search | `web_search.py` | Research attack patterns | 2-5s |
-| 3.5 RAG Retrieval | `rag_engine.py` | Find similar investigations | <1s |
-| 4. LLM Analysis | `llm_analyzer.py` | AI classification | 5-30s |
-| 5. Validation | `web_search.py` | Verify findings | 2-5s |
+| Component | Port | Language | Role |
+|-----------|------|----------|------|
+| Splunk Enterprise | 8089 | — | SIEM — event storage, search, alerts |
+| MCP Connector | 3000 | Node.js | HTTP bridge to Splunk REST API |
+| SOC Agent | 8080 | Python | Investigation engine — orchestrates everything |
+| ChromaDB | embedded | Python | Vector store for RAG memory |
 
-**Total**: 15-60 seconds per investigation
+---
+
+## Investigation Pipeline
+
+When an event hits `/api/investigate/comprehensive`, the `comprehensive_analyzer.py` module runs 6 steps:
+
+```
+┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
+│ Step 1  │──▶│ Step 2  │──▶│ Step 3  │──▶│ Step 3.5│──▶│ Step 4  │──▶│ Step 5  │
+│ Splunk  │   │  IOC    │   │  Web    │   │  RAG    │   │  LLM    │   │Validate │
+│ Context │   │ Enrich  │   │ Search  │   │Retrieve │   │Analysis │   │Findings │
+└─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
+```
+
+### Step Details
+
+| Step | Module | What Happens | Time |
+|------|--------|-------------|------|
+| 1 | `splunk_mcp.py` | Queries Splunk for related events, auth failures, network connections from same IP/host/user | 2–5s |
+| 2 | `web_enrichment.py` | Looks up IPs, domains, hashes against GreyNoise, URLhaus, VirusTotal, AbuseIPDB, Shodan | 3–10s |
+| 3 | `web_search.py` | Searches DuckDuckGo/Serper for known campaigns, CVE details, remediation guidance | 2–5s |
+| 3.5 | `rag_engine.py` | Retrieves similar past investigations, analyst feedback, playbooks, MITRE techniques from ChromaDB | <1s |
+| 4 | `comprehensive_analyzer.py` | Builds structured prompt with all context, sends to Gemini/Claude/OpenAI | 5–30s |
+| 5 | `comprehensive_analyzer.py` | Cross-validates key findings with additional web searches | 2–5s |
+
+### Output
+
+The pipeline returns a structured JSON report:
+
+```json
+{
+  "investigation_id": "INV-20260211083000",
+  "classification": "true_positive",
+  "severity": "critical",
+  "confidence": 92,
+  "mitre_techniques": ["T1059.001", "T1105"],
+  "ioc_findings": { ... },
+  "recommended_actions": [ ... ],
+  "rag_context_used": true,
+  "pipeline_steps": { ... }
+}
+```
+
+After the report is generated, it's automatically stored in the RAG vector store for future reference.
 
 ---
 
 ## RAG Memory Architecture
 
-### What is RAG?
-
-**RAG (Retrieval-Augmented Generation)** enhances AI analysis by providing relevant context from a knowledge base:
+ChromaDB stores 4 collections. Each document is embedded as a vector for semantic similarity search.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           RAG ARCHITECTURE                                       │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-                    ┌─────────────────────────────────┐
-                    │        SECURITY EVENT           │
-                    │  "PowerShell encoded command"   │
-                    └───────────────┬─────────────────┘
-                                    │
-                                    │  Text → Embedding
-                                    ▼
-                    ┌─────────────────────────────────┐
-                    │     EMBEDDING MODEL             │
-                    │  (all-MiniLM-L6-v2 via ONNX)    │
-                    └───────────────┬─────────────────┘
-                                    │
-                                    │  [0.12, -0.34, 0.78, ...]
-                                    ▼
-     ┌─────────────────────────────────────────────────────────────────┐
-     │                      CHROMADB VECTOR DATABASE                    │
-     │                                                                  │
-     │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-     │  │  INVESTIGATIONS │  │    PLAYBOOKS    │  │ MITRE_KNOWLEDGE │ │
-     │  │                 │  │                 │  │                 │ │
-     │  │  Past reports   │  │  SOC response   │  │  20 techniques  │ │
-     │  │  Auto-ingested  │  │  procedures     │  │  T1059, T1110   │ │
-     │  │  after each     │  │                 │  │  T1078, etc.    │ │
-     │  │  investigation  │  │  - PowerShell   │  │                 │ │
-     │  │                 │  │  - Brute Force  │  │  Descriptions,  │ │
-     │  │                 │  │  - Lateral Move │  │  tactics, IOCs  │ │
-     │  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-     │                                                                  │
-     │  ┌─────────────────┐                                            │
-     │  │ANALYST_FEEDBACK │                                            │
-     │  │                 │                                            │
-     │  │ Human verdicts  │                                            │
-     │  │ on AI decisions │                                            │
-     │  └─────────────────┘                                            │
-     │                                                                  │
-     └──────────────────────────────┬──────────────────────────────────┘
-                                    │
-                                    │  Cosine Similarity Search
-                                    ▼
-                    ┌─────────────────────────────────┐
-                    │      TOP-K SIMILAR RESULTS      │
-                    │                                 │
-                    │  1. Past investigation (95%)    │
-                    │  2. MITRE T1059.001 (89%)       │
-                    │  3. PowerShell playbook (85%)   │
-                    └───────────────┬─────────────────┘
-                                    │
-                                    │  Injected into LLM prompt
-                                    ▼
-                    ┌─────────────────────────────────┐
-                    │         LLM ANALYSIS            │
-                    │   (Enhanced with RAG context)   │
-                    └─────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│                   ChromaDB (local)                  │
+│                                                     │
+│  ┌──────────────┐  ┌──────────────┐                │
+│  │investigations │  │analyst       │                │
+│  │              │  │_feedback     │                │
+│  │ Past reports │  │ Human        │                │
+│  │ + outcomes   │  │ verdicts     │                │
+│  └──────────────┘  └──────────────┘                │
+│                                                     │
+│  ┌──────────────┐  ┌──────────────┐                │
+│  │playbooks     │  │mitre         │                │
+│  │              │  │_knowledge    │                │
+│  │ Response     │  │ Technique    │                │
+│  │ procedures   │  │ descriptions │                │
+│  └──────────────┘  └──────────────┘                │
+└─────────────────────────────────────────────────────┘
 ```
 
-### RAG Collections
+### Collections
 
-| Collection | Documents | Content | Update Method |
-|------------|-----------|---------|---------------|
-| `investigations` | Variable | Past investigation reports | Auto-ingested |
-| `analyst_feedback` | Variable | Human verdicts on AI decisions | Manual via API |
-| `playbooks` | 10 chunks | SOC response procedures | Seed at startup |
-| `mitre_knowledge` | 20 | MITRE ATT&CK techniques | Seed at startup |
+| Collection | Contents | Seed Count | Grows How |
+|------------|----------|-----------|-----------|
+| `investigations` | Full investigation reports | 0 | Auto-ingested after each investigation |
+| `analyst_feedback` | Human verdicts + notes | 0 | Via `/api/rag/feedback` endpoint |
+| `playbooks` | Response procedures (markdown) | ~10 | Loaded from `knowledge/playbooks/` |
+| `mitre_knowledge` | ATT&CK technique descriptions | ~20 | Loaded from `knowledge/mitre_techniques.json` |
 
-### RAG Data Flow
+### How RAG Feeds into LLM Prompts
+
+At Step 3.5, `rag_engine.retrieve_context()` searches all 4 collections with the event data as the query. Results are formatted and injected into the LLM prompt under a "Historical Context" section:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         RAG LIFECYCLE                                            │
-└─────────────────────────────────────────────────────────────────────────────────┘
+Previous similar investigations:
+- INV-20260210: Similar encoded PowerShell from 185.220.x.x → classified TRUE_POSITIVE
+- Analyst override: "Confirmed C2 beacon, block at firewall"
 
-  SEED PHASE (Startup)                    RUNTIME PHASE
-  ─────────────────────                   ──────────────────────────────────────
+Relevant playbooks:
+- PowerShell Attack Response: Isolate host, check parent process tree...
 
-  ┌────────────────┐                      ┌────────────────┐
-  │ mitre_techniques│                     │ Investigation  │
-  │    .json (20)   │──┐                  │   Request      │
-  └────────────────┘  │                   └───────┬────────┘
-                      │                           │
-  ┌────────────────┐  │  bootstrap_               │ Step 3.5: RAG Retrieve
-  │ playbooks/*.md │──┼─ knowledge()              ▼
-  │ (3 files)      │  │                   ┌────────────────┐
-  └────────────────┘  │                   │ rag_engine.    │
-                      │                   │ retrieve_      │
-  ┌────────────────┐  │                   │ context()      │
-  │ demo_results   │──┘                   └───────┬────────┘
-  │ .json (opt)    │                              │
-  └────────────────┘                              │ Returns similar:
-                                                  │ - Investigations
-          │                                       │ - MITRE techniques
-          │                                       │ - Playbooks
-          ▼                                       ▼
-  ┌────────────────┐                      ┌────────────────┐
-  │   ChromaDB     │◀─────────────────────│   LLM Prompt   │
-  │   (rag_data/)  │                      │   (enhanced)   │
-  └───────┬────────┘                      └───────┬────────┘
-          │                                       │
-          │                                       ▼
-          │  AUTO-INGEST                  ┌────────────────┐
-          │  (after investigation)        │   Analysis     │
-          │                               │   Complete     │
-          │◀──────────────────────────────└────────────────┘
-          │
-          │  store_investigation(report)
-          ▼
-  ┌────────────────┐
-  │ Investigation  │
-  │ saved for      │
-  │ future RAG     │
-  └────────────────┘
+MITRE techniques:
+- T1059.001: Command and Scripting Interpreter: PowerShell
 ```
+
+This means the LLM doesn't start from scratch — it has org-specific context from day one.
 
 ---
 
-## Module Architecture
-
-### SOC Agent Modules
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         SOC AGENT MODULE MAP                                     │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-                              ┌─────────────────┐
-                              │    main.py      │
-                              │  (FastAPI App)  │
-                              │  ~1100 lines    │
-                              │  50+ endpoints  │
-                              └────────┬────────┘
-                                       │
-         ┌─────────────┬───────────────┼───────────────┬─────────────┐
-         │             │               │               │             │
-         ▼             ▼               ▼               ▼             ▼
-┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│comprehensive│ │ rag_engine  │ │ llm_analyzer│ │ splunk_mcp  │ │ correlation │
-│ _analyzer   │ │   .py       │ │    .py      │ │    .py      │ │    .py      │
-│    .py      │ │             │ │             │ │             │ │             │
-│             │ │ ChromaDB    │ │ Gemini/     │ │ Native MCP  │ │ Detection   │
-│ 6-step      │ │ vector      │ │ Claude/     │ │ client      │ │ rules       │
-│ pipeline    │ │ store       │ │ OpenAI      │ │             │ │             │
-│ orchestrator│ │             │ │             │ │             │ │             │
-└──────┬──────┘ └─────────────┘ └─────────────┘ └──────┬──────┘ └─────────────┘
-       │                                               │
-       │                                               │
-       └───────────────────┬───────────────────────────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-         ▼                 ▼                 ▼
-┌─────────────────┐ ┌─────────────┐ ┌─────────────────┐
-│ web_enrichment  │ │ web_search  │ │ knowledge_store │
-│      .py        │ │    .py      │ │      .py        │
-│                 │ │             │ │                 │
-│ - VirusTotal    │ │ - DuckDuckGo│ │ - Seed MITRE    │
-│ - GreyNoise     │ │ - Serper    │ │ - Load playbooks│
-│ - AbuseIPDB     │ │ - Google    │ │ - Bootstrap     │
-│ - URLhaus       │ │             │ │                 │
-└─────────────────┘ └─────────────┘ └─────────────────┘
-```
-
-### Module Responsibilities
+## Module Map
 
 | Module | Lines | Purpose |
 |--------|-------|---------|
-| `main.py` | ~1100 | FastAPI app, all HTTP endpoints |
-| `comprehensive_analyzer.py` | ~600 | Orchestrates 6-step pipeline |
-| `rag_engine.py` | ~300 | ChromaDB operations, embedding, retrieval |
-| `knowledge_store.py` | ~100 | Seed MITRE, playbooks at startup |
-| `llm_analyzer.py` | ~380 | Gemini/Claude/OpenAI integration |
-| `splunk_mcp.py` | ~450 | Splunk Native MCP client |
-| `web_enrichment.py` | ~400 | IOC enrichment APIs |
-| `web_search.py` | ~620 | Web search, validation |
-| `correlation.py` | ~150 | Detection rules, MITRE mapping |
+| `main.py` | ~1120 | FastAPI app — all endpoints, request routing |
+| `comprehensive_analyzer.py` | ~616 | 6-step pipeline orchestrator |
+| `rag_engine.py` | ~536 | ChromaDB vector store — store, retrieve, search |
+| `knowledge_store.py` | ~166 | Seeds MITRE + playbooks into RAG on startup |
+| `llm_analyzer.py` | ~379 | Single-event LLM analysis (Gemini/Claude/OpenAI) |
+| `enriched_analyzer.py` | ~618 | IOC enrichment + LLM combined analysis |
+| `web_enrichment.py` | ~644 | Threat intel API integrations |
+| `web_search.py` | ~619 | Web search (DuckDuckGo, Serper, Google) |
+| `splunk_mcp.py` | ~446 | Direct Splunk REST API client |
+| `mcp_client.py` | ~285 | MCP connector HTTP client |
+| `correlation.py` | ~206 | Rule-based event correlation engine |
+| `alert_monitor.py` | ~380 | Continuous Splunk alert polling |
+| `prompts.py` | ~90 | LLM prompt templates |
+| `config.py` | ~46 | Environment variable loader |
 
 ---
 
-## API Architecture
+## API Endpoint Map
 
-### Endpoint Map
+### Investigation
+- `POST /api/investigate/comprehensive` — Full 6-step pipeline
+- `POST /api/analyze` — LLM-only analysis
+- `POST /api/analyze/enriched` — LLM + IOC enrichment
+- `POST /api/triage` — Quick classification
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           API ENDPOINTS                                          │
-└─────────────────────────────────────────────────────────────────────────────────┘
+### Splunk
+- `POST /api/splunk-mcp/ask` — Natural language → SPL
+- `POST /api/splunk-mcp/search` — Execute raw SPL
+- `GET /api/events` — Recent events
+- `GET /api/splunk-mcp/test` — Connection test
 
- HEALTH & STATUS
- ───────────────
- GET  /health                         → Service health
- GET  /api/status/full                → All components status
- GET  /api/pipeline/status            → Pipeline health
+### Threat Intel
+- `POST /api/enrich/ioc` — Single indicator lookup
+- `POST /api/enrich/bulk` — Bulk indicator lookup
+- `POST /api/enrich/event` — Full event IOC extraction + enrichment
+- `POST /api/web-search/threat` — Threat research
+- `POST /api/web-search/remediation` — Remediation lookup
+- `POST /api/research/comprehensive` — Multi-source research
 
- INVESTIGATION (Main Feature)
- ────────────────────────────
- POST /api/investigate/comprehensive  → Full 6-step investigation with RAG
- POST /api/analyze/enriched           → LLM + IOC enrichment (no RAG)
- POST /api/ai/analyze                 → LLM only
- POST /api/triage/quick               → Quick severity assessment
+### RAG
+- `GET /api/rag/status` — Collection stats
+- `POST /api/rag/search` — Semantic search
+- `POST /api/rag/feedback` — Submit analyst verdict
+- `POST /api/rag/bootstrap` — Re-seed knowledge base
+- `POST /api/rag/ingest/playbook` — Add playbook
+- `POST /api/rag/ingest/investigation` — Add investigation
 
- RAG MEMORY
- ──────────
- GET  /api/rag/status                 → RAG engine status, document counts
- POST /api/rag/search                 → Semantic search across all collections
- POST /api/rag/feedback               → Submit analyst verdict
- POST /api/rag/ingest/investigation   → Manually ingest investigation
- POST /api/rag/ingest/playbook        → Add new playbook
- POST /api/rag/seed/mitre             → Re-seed MITRE techniques
- POST /api/rag/bootstrap              → Full knowledge re-seed
-
- SPLUNK
- ──────
- GET  /api/splunk-mcp/test            → Test Splunk connection
- POST /api/splunk-mcp/ask             → Natural language → SPL
- POST /api/splunk-mcp/search          → Execute SPL query
-
- IOC ENRICHMENT
- ──────────────
- POST /api/enrich/ioc                 → Enrich single IOC
- POST /api/enrich/bulk                → Enrich multiple IOCs
- POST /api/enrich/ip                  → IP-specific enrichment
- POST /api/enrich/domain              → Domain-specific enrichment
- POST /api/enrich/hash                → Hash-specific enrichment
-
- WEB RESEARCH
- ────────────
- POST /api/search/web                 → General web search
- GET  /api/research/mitre/{id}        → Research MITRE technique
- GET  /api/research/cve/{id}          → Research CVE
-
- CORRELATION
- ───────────
- GET  /api/rules                      → List detection rules
- POST /api/correlate                  → Run correlation on events
- POST /api/mock/generate              → Generate mock alerts
-```
+### System
+- `GET /health` — Health check
+- `GET /api/status/full` — All component status
+- `GET /api/pipeline/status` — Pipeline config
+- `POST /api/monitor/start` — Start alert polling
+- `POST /api/monitor/stop` — Stop alert polling
 
 ---
 
-## Data Models
+## Environment Configuration
 
-### Investigation Report Structure
+All config is loaded from `.env` via `python-dotenv`. See `.env.example` for the full list.
 
-```json
-{
-  "status": "success",
-  "investigation_id": "INV-20260212100000",
-  "investigation_time_seconds": 45.2,
-
-  "data_sources": {
-    "splunk_context": {
-      "host_events": 15,
-      "user_events": 8,
-      "ip_events": 20
-    },
-    "ioc_enrichment": {
-      "enriched_count": 3,
-      "malicious_count": 1
-    },
-    "web_research": {
-      "sources_found": 10
-    },
-    "rag_context": {
-      "investigations": 2,
-      "mitre_techniques": 3,
-      "playbooks": 1
-    }
-  },
-
-  "analysis": {
-    "classification": "true_positive",
-    "confidence": 95,
-    "severity": "critical",
-    "severity_justification": "...",
-
-    "mitre_attack": {
-      "techniques": [
-        {"id": "T1059.001", "name": "PowerShell", "confidence": 95}
-      ],
-      "tactics": ["Execution", "Defense Evasion"],
-      "kill_chain_phase": "Execution"
-    },
-
-    "recommended_actions": {
-      "immediate": ["Isolate host", "Block IP"],
-      "short_term": ["Memory forensics", "Log review"],
-      "long_term": ["EDR deployment", "Training"]
-    }
-  },
-
-  "rag_ingested": true,
-  "rag_doc_ids": ["inv_abc123"]
-}
-```
-
-### RAG Document Structure
-
-```json
-{
-  "id": "inv_20260212100000",
-  "content": "Investigation of PowerShell encoded command on WORKSTATION05...",
-  "metadata": {
-    "type": "investigation",
-    "classification": "true_positive",
-    "severity": "critical",
-    "techniques": ["T1059.001"],
-    "timestamp": "2026-02-12T10:00:00"
-  }
-}
-```
+| Variable | Default | Required | Purpose |
+|----------|---------|----------|---------|
+| `SPLUNK_HOST` | `localhost` | Yes | Splunk management host |
+| `SPLUNK_PORT` | `8089` | Yes | Splunk management port |
+| `SPLUNK_USERNAME` | `admin` | Yes | Splunk credentials |
+| `SPLUNK_PASSWORD` | — | Yes | Splunk credentials |
+| `LLM_PROVIDER` | `gemini` | Yes | `gemini`, `openai`, or `claude` |
+| `GEMINI_API_KEY` | — | If using Gemini | Google AI Studio key |
+| `RAG_ENABLED` | `true` | No | Enable/disable RAG |
+| `RAG_TOP_K` | `5` | No | Results per collection |
+| `AGENT_PORT` | `8080` | No | SOC Agent listen port |
+| `NODE_PORT` | `3000` | No | MCP Connector listen port |
 
 ---
 
-## Deployment Architecture
+## Security Notes
 
-### Local Development
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           LOCAL MACHINE                                          │
-│                                                                                  │
-│   TERMINAL 1                TERMINAL 2                TERMINAL 3                │
-│   ──────────                ──────────                ──────────                │
-│                                                                                  │
-│   Splunk Enterprise         MCP Connector             SOC Agent                 │
-│   (pre-installed)           cd mcp-connector          cd soc-agent              │
-│                             node index.js             python main.py            │
-│                                                                                  │
-│   Port 8089 ←───────────── Port 3000 ←───────────── Port 8080                  │
-│                                                            │                     │
-│                                                            │                     │
-│                                                            ▼                     │
-│                                                     ┌─────────────┐             │
-│                                                     │  rag_data/  │             │
-│                                                     │  ChromaDB   │             │
-│                                                     │  (local)    │             │
-│                                                     └─────────────┘             │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Port Summary
-
-| Service | Port | Protocol | Start Command |
-|---------|------|----------|---------------|
-| Splunk Enterprise | 8089 | HTTPS | `splunk start` |
-| Splunk Web UI | 8000 | HTTP | (auto with Splunk) |
-| MCP Connector | 3000 | HTTP | `node index.js` |
-| SOC Agent | 8080 | HTTP | `python main.py` |
-
----
-
-## Security Considerations
-
-### Credential Management
-
-```
-.env (NEVER COMMIT)
-├── SPLUNK_USERNAME
-├── SPLUNK_PASSWORD
-├── GEMINI_API_KEY
-├── VIRUSTOTAL_API_KEY
-└── ...
-
-.gitignore includes:
-├── .env
-├── .env.local
-├── rag_data/      # Local ChromaDB storage
-└── demo_results.json
-```
-
-### API Authentication
-
-| Service | Auth Method |
-|---------|-------------|
-| Splunk | Basic Auth (user:pass) |
-| Gemini | API Key in URL |
-| GreyNoise | Optional API key |
-| URLhaus | None (free) |
-| DuckDuckGo | None (free) |
-
----
-
-*Architecture documentation v2.0 - February 2026*
+- Splunk credentials are stored in `.env`, never committed (`.gitignore`)
+- API keys for threat intel services are optional — system degrades gracefully
+- CORS is set to allow all origins (`*`) for local dev — restrict in production
+- All Splunk API calls use `verify=False` for self-signed certs in local environments
+- ChromaDB data is stored locally in `soc-agent/rag_data/` — excluded from git

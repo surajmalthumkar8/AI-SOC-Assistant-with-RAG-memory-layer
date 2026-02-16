@@ -1,11 +1,13 @@
 # AI SOC Assistant
 
-Local AI-powered Security Operations Center that connects **Splunk Enterprise** to an intelligent investigation pipeline with **RAG memory**.
+Automated alert triage and investigation pipeline for Splunk, backed by LLM analysis and a RAG memory layer.
+
+Built for SOC teams that want faster triage, fewer false positives, and persistent investigation context.
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Splunk    │────▶│     MCP     │────▶│  SOC Agent  │────▶│   Gemini    │
-│   :8089     │     │   :3000     │     │   :8080     │     │     AI      │
+│   Splunk    │────▶│     MCP     │────▶│  SOC Agent  │────▶│   LLM API   │
+│   :8089     │     │   :3000     │     │   :8080     │     │  (Gemini)   │
 └─────────────┘     └─────────────┘     └──────┬──────┘     └─────────────┘
                                                │
                     ┌──────────────────────────┼──────────────────────────┐
@@ -13,264 +15,220 @@ Local AI-powered Security Operations Center that connects **Splunk Enterprise** 
                     ▼                          ▼                          ▼
              ┌─────────────┐           ┌─────────────┐           ┌─────────────┐
              │  ChromaDB   │           │   Threat    │           │    Web      │
-             │    RAG      │           │    Intel    │           │   Search    │
+             │  (RAG)      │           │    Intel    │           │   Search    │
              └─────────────┘           └─────────────┘           └─────────────┘
 ```
 
 ---
 
-## Quick Start (5 Minutes)
+## Quick Start
 
 ### Prerequisites
 
-| Requirement | Version | Download |
-|-------------|---------|----------|
-| Splunk Enterprise | 9.x / 10.x | https://splunk.com/download |
-| Node.js | 18+ | https://nodejs.org |
-| Python | 3.10+ | https://python.org |
-| Gemini API Key | Free | https://aistudio.google.com |
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Splunk Enterprise | 9.x+ | Running on `localhost:8089` |
+| Node.js | 18+ | For MCP connector |
+| Python | 3.9+ | For SOC agent |
+| Gemini API Key | Free tier | [Get one here](https://aistudio.google.com) |
 
-### Step 1: Configure Environment
+### 1. Configure Environment
 
-Create `.env` file in project root:
+Copy the example and fill in your values:
 
 ```bash
-# Required - Splunk Connection
+cp .env.example .env
+```
+
+At minimum, set:
+```
 SPLUNK_HOST=localhost
 SPLUNK_PORT=8089
 SPLUNK_USERNAME=admin
-SPLUNK_PASSWORD=your_password
-SPLUNK_VERIFY_SSL=false
-
-# Required - AI Provider (Gemini is free)
+SPLUNK_PASSWORD=<your_splunk_password>
 LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key
-
-# Service Ports
-AGENT_PORT=8080
-NODE_PORT=3000
-
-# RAG Memory (auto-enabled)
-RAG_ENABLED=true
-RAG_TOP_K=5
-
-# Debug
-DEBUG=true
+GEMINI_API_KEY=<your_key>
 ```
 
-### Step 2: Install Dependencies
+### 2. Install Dependencies
 
 ```bash
-# Terminal 1: Install MCP Connector
-cd mcp-connector
-npm install
+# MCP Connector
+cd mcp-connector && npm install
 
-# Terminal 2: Install SOC Agent
-cd soc-agent
+# SOC Agent (use a virtual environment)
+cd ../soc-agent
+python3 -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Step 3: Start Services
+### 3. Start Services
 
-**Terminal 1 - MCP Connector:**
+Open two terminals:
+
+**Terminal 1 — MCP Connector (port 3000):**
 ```bash
 cd mcp-connector
 node index.js
 ```
-Expected: `[+] Server running on port 3000`
 
-**Terminal 2 - SOC Agent:**
+**Terminal 2 — SOC Agent (port 8080):**
 ```bash
 cd soc-agent
-python main.py
+python3 main.py
 ```
-Expected: `INFO: Uvicorn running on http://0.0.0.0:8080`
 
-### Step 4: Verify Everything Works
+### 4. Load Sample Data (Optional)
 
 ```bash
-# Check all services
-curl http://localhost:8080/api/status/full
+cd soc-agent
+python3 splunk_data_loader.py
 ```
 
-Expected output:
-```json
-{
-  "soc_agent": "running",
-  "components": {
-    "mcp_connector": "running",
-    "splunk": "connected"
-  },
-  "llm": {"enabled": true, "provider": "gemini"},
-  "rag": {
-    "status": "active",
-    "total_documents": 34
-  }
-}
+This uploads 100+ security events covering 9 attack scenarios and creates 24 detection alerts in Splunk.
+
+### 5. Verify
+
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/api/status/full
+curl http://localhost:8080/api/rag/status
 ```
 
 ---
 
-## Running Demos
+## How It Works
 
-### Option 1: Use Demo Runner (Recommended)
+### Investigation Pipeline
 
-```bash
-# Run ALL demos
-python demo_runner.py
+When you submit an event to `/api/investigate/comprehensive`, the agent runs a 6-step pipeline:
 
-# Run specific demo
-python demo_runner.py comprehensive    # Full investigation
-python demo_runner.py rag              # RAG-specific demo (add this)
+```
+Step 1: Query Splunk for historical context around the event
+Step 2: Enrich IOCs (IPs, domains, hashes) against threat intel APIs
+Step 3: Web search for known campaigns, CVEs, and remediation
+Step 3.5: RAG retrieval — pull similar past investigations and playbooks
+Step 4: LLM analysis — structured prompt with all context injected
+Step 5: Cross-validate findings with additional lookups
+Step 6: Return structured report with classification, severity, and actions
 ```
 
-### Option 2: Direct API Calls
+### RAG Memory
 
-**Comprehensive Investigation (Full Pipeline + RAG):**
-```bash
-curl -X POST http://localhost:8080/api/investigate/comprehensive \
-  -H "Content-Type: application/json" \
-  -d '{
-    "event_data": {
-      "event_type": "process_creation",
-      "host": "WORKSTATION05",
-      "user": "jsmith",
-      "process": "powershell.exe",
-      "command_line": "powershell.exe -enc SQBFAFgA...",
-      "src_ip": "185.220.101.45"
-    }
-  }'
-```
+The system stores every investigation in ChromaDB. On the next triage, it retrieves similar past cases and injects that context into the LLM prompt. This means:
 
-**Check RAG Status:**
-```bash
-curl http://localhost:8080/api/rag/status
-```
+- If an analyst previously marked something as a false positive, the system remembers
+- Playbooks for common attack patterns are pulled automatically
+- MITRE technique descriptions are available without external lookups
 
-**Search RAG Knowledge:**
-```bash
-curl -X POST http://localhost:8080/api/rag/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "PowerShell encoded command", "top_k": 5}'
-```
+**Seeded with**: 20 MITRE techniques + 3 SOC playbooks on first boot.
 
 ---
 
 ## Project Structure
 
 ```
-splunk_ai_mcp_soc/
-├── .env                        # Configuration (create this)
-├── README.md                   # This file - Quick start
-├── ARCHITECTURE.md             # Technical design & diagrams
-├── DEMO_RUNBOOK.md             # Step-by-step demo guide
-│
-├── mcp-connector/              # Node.js Splunk bridge
-│   ├── index.js                # Express server
+├── .env.example                   # Configuration template
+├── mcp-connector/                 # Node.js Splunk bridge
+│   ├── index.js                   # Express server — proxies Splunk REST API
 │   └── package.json
-│
-├── soc-agent/                  # Python AI agent
-│   ├── main.py                 # FastAPI endpoints
-│   ├── comprehensive_analyzer.py  # 6-step investigation pipeline
-│   ├── rag_engine.py           # ChromaDB vector store
-│   ├── knowledge_store.py      # Knowledge seeding
-│   ├── llm_analyzer.py         # Gemini/Claude/OpenAI
-│   ├── web_enrichment.py       # IOC enrichment
-│   ├── web_search.py           # Web research
-│   ├── knowledge/              # Seed data
+├── soc-agent/                     # Python investigation engine
+│   ├── main.py                    # FastAPI app — all endpoints
+│   ├── comprehensive_analyzer.py  # 6-step pipeline orchestrator
+│   ├── rag_engine.py              # ChromaDB vector store
+│   ├── knowledge_store.py         # Seeds MITRE + playbooks into RAG
+│   ├── llm_analyzer.py            # Gemini / Claude / OpenAI integration
+│   ├── enriched_analyzer.py       # IOC enrichment + LLM combo
+│   ├── web_enrichment.py          # VirusTotal, AbuseIPDB, Shodan, etc.
+│   ├── web_search.py              # DuckDuckGo / Serper / Google CSE
+│   ├── splunk_mcp.py              # Direct Splunk REST client
+│   ├── mcp_client.py              # MCP connector client
+│   ├── correlation.py             # Rule-based event correlation
+│   ├── alert_monitor.py           # Continuous alert polling
+│   ├── prompts.py                 # LLM prompt templates
+│   ├── config.py                  # Environment config loader
+│   ├── knowledge/                 # Seed data
 │   │   ├── mitre_techniques.json
 │   │   └── playbooks/
 │   └── requirements.txt
-│
-├── demo_runner.py              # Cross-platform demo script
-└── test_rag.py                 # RAG test suite
+├── sample_data/
+│   └── security_events.json       # 100+ events, 9 attack scenarios
+├── demo_runner.py                 # Automated demo script
+└── test_rag.py                    # RAG validation suite
 ```
-
----
-
-## Key Features
-
-### 1. 6-Step Investigation Pipeline
-
-```
-Event ──▶ Splunk Context ──▶ IOC Enrichment ──▶ Web Search
-                                                    │
-                                                    ▼
-Report ◀── Validation ◀── LLM Analysis ◀── RAG Retrieval
-```
-
-### 2. RAG Memory Layer
-
-- **Auto-learns** from past investigations
-- **34 seed documents**: 20 MITRE techniques, 3 playbooks
-- **Semantic search** across all knowledge
-
-### 3. Multi-Source Intelligence
-
-| Source | Purpose | API Key |
-|--------|---------|---------|
-| Splunk | Historical context | Credentials |
-| GreyNoise | IP reputation | Optional |
-| URLhaus | Malware URLs | None |
-| DuckDuckGo | Web research | None |
-| ChromaDB | RAG memory | None |
 
 ---
 
 ## API Reference
 
-### Core Endpoints
+### Core
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
+| Endpoint | Method | What It Does |
+|----------|--------|--------------|
 | `/health` | GET | Health check |
-| `/api/status/full` | GET | Full system status |
+| `/api/status/full` | GET | All component status |
 | `/api/investigate/comprehensive` | POST | Full 6-step investigation |
+| `/api/analyze` | POST | LLM-only analysis |
+| `/api/enrich/ioc` | POST | Single IOC enrichment |
+| `/api/enrich/event` | POST | Full event IOC enrichment |
 
-### RAG Endpoints
+### RAG
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/rag/status` | GET | RAG engine status |
-| `/api/rag/search` | POST | Semantic search |
-| `/api/rag/feedback` | POST | Submit analyst feedback |
+| Endpoint | Method | What It Does |
+|----------|--------|--------------|
+| `/api/rag/status` | GET | Collection stats |
+| `/api/rag/search` | POST | Semantic search across all knowledge |
+| `/api/rag/feedback` | POST | Submit analyst verdict for learning |
 | `/api/rag/bootstrap` | POST | Re-seed knowledge base |
 
-### Splunk Endpoints
+### Splunk
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/splunk-mcp/ask` | POST | Natural language query |
-| `/api/splunk-mcp/search` | POST | Execute SPL |
+| Endpoint | Method | What It Does |
+|----------|--------|--------------|
+| `/api/splunk-mcp/ask` | POST | Natural language → SPL query |
+| `/api/splunk-mcp/search` | POST | Execute raw SPL |
+| `/api/events` | GET | Fetch recent security events |
+
+---
+
+## Sample Data Scenarios
+
+The sample data in `sample_data/security_events.json` covers:
+
+| # | Scenario | MITRE Techniques |
+|---|----------|-----------------|
+| 1 | APT intrusion chain | T1110, T1059, T1105, T1547, T1021, T1048 |
+| 2 | Phishing with macro payload | T1566, T1204, T1059, T1055 |
+| 3 | Insider threat — USB exfil | T1078, T1530, T1052 |
+| 4 | Ransomware deployment | T1110, T1021, T1490, T1486, T1489 |
+| 5 | Cryptominer via web shell | T1190, T1059, T1496, T1053 |
+| 6 | Normal admin activity | (baseline / false positive testing) |
+| 7 | Credential dumping (LSASS) | T1003.001, T1003.002 |
+| 8 | DNS tunneling | T1071.004, T1048.003 |
+| 9 | Kerberoasting | T1558.003 |
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| `Connection refused` | Start Splunk: `splunk start` |
-| `401 Unauthorized` | Check SPLUNK_USERNAME/PASSWORD in .env |
-| `RAG not active` | Run: `pip install chromadb` |
-| `Gemini 429` | Rate limit - wait 1 minute |
-| `Port in use` | Kill process: `netstat -ano | findstr :8080` |
-
-### Quick Health Check
-
-```bash
-curl http://localhost:3000/health   # MCP Connector
-curl http://localhost:8080/health   # SOC Agent
-curl http://localhost:8080/api/rag/status  # RAG Engine
-```
+| Problem | Fix |
+|---------|-----|
+| `Connection refused :3000` | Start MCP connector: `cd mcp-connector && node index.js` |
+| `Connection refused :8080` | Start SOC agent: `cd soc-agent && python3 main.py` |
+| `401 Unauthorized` | Check `SPLUNK_USERNAME` / `SPLUNK_PASSWORD` in `.env` |
+| `RAG disabled` | Set `RAG_ENABLED=true` in `.env`, install `chromadb` |
+| `Gemini 429 rate limit` | Wait 60 seconds, free tier has per-minute limits |
+| `chromadb install fails (M-series Mac)` | Try `pip install --no-binary :all: chroma-hnswlib` first |
 
 ---
 
-## Documentation
+## Docs
 
-| Document | Purpose |
-|----------|---------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Technical design, data flow diagrams |
-| [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) | Step-by-step demo with RAG examples |
+| File | Purpose |
+|------|---------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, module breakdown |
+| [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) | Step-by-step demo commands (PowerShell + Bash) |
 
 ---
 
